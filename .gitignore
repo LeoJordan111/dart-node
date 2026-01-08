@@ -11,6 +11,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Prisma : On ne garde que le schéma
+# Le client généré se reconstruit avec 'npx prisma generate'
+node_modules/@prisma/client
+
 # Système (Mac/Windows)
 .DS_Store
 Thumbs.db
@@ -18,3 +22,4 @@ Thumbs.db
 # Build/Dist (si tu utilises plus tard un compilateur comme TypeScript)
 dist/
 build/
+/src/generated/prisma

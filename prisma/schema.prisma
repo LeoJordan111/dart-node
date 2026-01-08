@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+model Player {
+  id        Int          @id @default(autoincrement())
+  nickname  String       @unique
+  createdAt DateTime     @default(now())
+  games     GamePlayer[]
+  turns     Turn[]       // Relation inverse ajoutée
+}
+
+model Game {
+  id        Int          @id @default(autoincrement())
+  type      String       @default("501")
+  status    String       @default("IN_PROGRESS")
+  createdAt DateTime     @default(now())
+  players   GamePlayer[]
+  sets      Set[]
+}
+
+model Set {
+  id       Int      @id @default(autoincrement())
+  gameId   Int
+  winnerId Int?
+  game     Game     @relation(fields: [gameId], references: [id])
+  legs     Leg[]
+}
+
+model Leg {
+  id       Int      @id @default(autoincrement())
+  setId    Int
+  winnerId Int?
+  set      Set      @relation(fields: [setId], references: [id])
+  turns    Turn[]   // Relation inverse ajoutée
+}
+
+model Turn {
+  id        Int    @id @default(autoincrement())
+  legId     Int
+  playerId  Int
+  points    Int    // Points marqués ce tour (ex: 60)
+  remaining Int?   // Score restant après ce tour (ex: 441)
+  
+  leg       Leg    @relation(fields: [legId], references: [id])
+  player    Player @relation(fields: [playerId], references: [id])
+}
+
+model GamePlayer {
+  gameId   Int
+  playerId Int
+  game     Game   @relation(fields: [gameId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
+
+  @@id([gameId, playerId])
+}
