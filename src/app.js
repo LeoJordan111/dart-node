@@ -16,6 +16,8 @@ app.use('/', express.static(path.join(__dirname, 'views')));
 // 3. LES ROUTES API
 const playerRoutes = require('./routes/player.routes');
 app.use('/api/players', playerRoutes);
+const gameRoutes = require('./routes/game.routes');
+app.use('/api/games', gameRoutes);
 
 // 4. LANCEMENT
 app.listen(PORT, () => {

@@ -1,10 +1,11 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  // previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
+  // url      = env("DATABASE_URL")
 }
 
 
@@ -39,18 +40,30 @@ model Leg {
   setId    Int
   winnerId Int?
   set      Set      @relation(fields: [setId], references: [id])
-  turns    Turn[]   // Relation inverse ajoutée
+  turns    Turn[]   
 }
 
 model Turn {
-  id        Int    @id @default(autoincrement())
-  legId     Int
-  playerId  Int
-  points    Int    // Points marqués ce tour (ex: 60)
-  remaining Int?   // Score restant après ce tour (ex: 441)
+  id         Int      @id @default(autoincrement())
+  legId      Int
+  playerId   Int
   
-  leg       Leg    @relation(fields: [legId], references: [id])
-  player    Player @relation(fields: [playerId], references: [id])
+  // Détail des 3 fléchettes
+  dart1      Int      @default(0)
+  dart2      Int      @default(0)
+  dart3      Int      @default(0)
+  
+  // Multiplicateurs (1 = Simple, 2 = Double, 3 = Triple)
+  multiplier1 Int     @default(1)
+  multiplier2 Int     @default(1)
+  multiplier3 Int     @default(1)
+
+  points     Int      // Somme totale : (d1*m1) + (d2*m2) + (d3*m3)
+  remaining  Int?     // Score restant après la volée
+  isBust     Boolean  @default(false)
+  
+  leg        Leg      @relation(fields: [legId], references: [id])
+  player     Player   @relation(fields: [playerId], references: [id])
 }
 
 model GamePlayer {

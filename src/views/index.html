@@ -4,17 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
-    <title>02.Dart - Gestion des Joueurs</title>
+    <title>02.Dart - Configuration</title>
 </head>
 <body>
-    <h1>🎮 Liste des Joueurs</h1>
-    
-    <div id="register-form">
-        <input type="text" id="nickname" placeholder="Pseudo du joueur...">
-        <button onclick="registerPlayer()">Ajouter</button>
-    </div>
 
-    <ul id="player-list"></ul>
+    <main class="app-container">
+        
+        <section class="setup-card">
+            <h1>👥 Gestion des Joueurs</h1>
+            <div id="register-form" class="input-group">
+                <input type="text" id="nickname" placeholder="Pseudo du joueur...">
+                <button class="btn-secondary" onclick="registerPlayer()">Ajouter</button>
+            </div>
+            <ul id="player-list"></ul>
+        </section>
+
+        <section id="setup-container" class="setup-card">
+            <h1>🎯 Configuration du Match</h1>
+            
+            <div class="form-group">
+                <label>Mode de jeu :</label>
+                <select id="game-type">
+                    <option value="301">301</option>
+                    <option value="501" selected>501</option>
+                    <option value="701">701</option>
+                    <option value="1001">1001</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sets gagnants :</label>
+                    <select id="sets-to-win">
+                        <option value="1">1</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Legs par Set :</label>
+                    <select id="legs-per-set">
+                        <option value="1">1</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="player-selection" class="form-group">
+                <label>Joueurs (Sélectionnez-en 2)</label>
+                <div id="player-checkboxes" class="checkbox-grid">
+                    </div>
+            </div>
+
+            <button class="btn-primary" onclick="startGame()">DÉMARRER LA PARTIE</button>
+        </section>
+
+        <section id="game-container" style="display:none;">
+            </section>
+
+    </main>
 
     <script src="/js/main.js"></script>
 </body>

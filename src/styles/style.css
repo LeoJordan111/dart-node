@@ -1,14 +1,111 @@
-body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    max-width: 600px; 
-    margin: 50px auto; 
-    background-color: #f4f4f9;
-    color: #333;
+:root {
+  --primary-color: #2c3e50;
+  --accent-color: #27ae60;
+  --bg-color: #f4f7f6;
+  --text-color: #333;
 }
-h1 { color: #2c3e50; text-align: center; }
-#register-form { display: flex; gap: 10px; margin-bottom: 20px; }
-input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
-button:hover { background: #2980b9; }
-ul { list-style: none; padding: 0; }
-li { background: white; margin: 10px 0; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Conteneur principal du Menu */
+#setup-screen {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+/* Groupes de formulaires */
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+select, input[type="number"] {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+select:focus, input:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+/* Zone de sélection des joueurs */
+#players-list-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Deux colonnes */
+  gap: 10px;
+  margin: 1rem 0;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.player-option {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.player-option input {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+/* Bouton Démarrer */
+#btn-start {
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.3s;
+  margin-top: 1rem;
+}
+
+#btn-start:hover {
+  background-color: #219150;
+}
+
+#btn-start:active {
+  transform: scale(0.98);
+}

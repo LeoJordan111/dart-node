@@ -1,47 +1,50 @@
-// src/js/main.js
+async function loadPlayersForSetup() {
+    const res = await fetch('/api/players');
+    const players = await res.json();
+    const container = document.getElementById('player-checkboxes');
+    
+    container.innerHTML = players.map(p => `
+        <label>
+            <input type="checkbox" name="players" value="${p.id}"> ${p.nickname}
+        </label>
+    `).join('<br>');
+}
 
-// Charger les joueurs au démarrage
-async function loadPlayers() {
-    try {
-        const res = await fetch('/api/players');
-        const players = await res.json();
-        const list = document.getElementById('player-list');
+async function startGame() {
+    const type = document.getElementById('game-type').value;
+    const setsToWin = document.getElementById('sets-to-win').value;
+    const legsPerSet = document.getElementById('legs-per-set').value;
+    
+    // Récupérer les IDs des joueurs cochés
+    const selectedPlayers = Array.from(document.querySelectorAll('input[name="players"]:checked'))
+                                 .map(cb => parseInt(cb.value));
+
+    if (selectedPlayers.length < 2) return alert("Sélectionnez au moins 2 joueurs !");
+
+    // Créer la partie dans le Back-end
+    const response = await fetch('/api/games/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            type,
+            setsToWin,
+            legsPerSet,
+            playerIds: selectedPlayers
+        })
+    });
+
+    if (response.ok) {
+        const gameData = await response.json();
+        console.log("Partie créée avec succès :", gameData);
         
-        list.innerHTML = players.map(p => `
-            <li>
-                <strong>${p.nickname}</strong> 
-                <span class="player-id">ID: ${p.id}</span>
-            </li>
-        `).join('');
-    } catch (error) {
-        console.error("Erreur lors du chargement:", error);
+        // Basculer l'affichage du menu vers le jeu
+        document.getElementById('setup-container').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        
+        // Initialiser ton moteur de 501 avec gameData
+        initGameEngine(gameData);
     }
 }
 
-// Envoyer un nouveau joueur
-async function registerPlayer() {
-    const input = document.getElementById('nickname');
-    const nickname = input.value;
-
-    if (!nickname) return alert("Choisis un pseudo !");
-
-    try {
-        const response = await fetch('/api/players/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nickname })
-        });
-
-        if (response.ok) {
-            input.value = '';
-            loadPlayers(); // Rafraîchir la liste
-        } else {
-            alert("Erreur lors de l'enregistrement");
-        }
-    } catch (error) {
-        console.error("Erreur:", error);
-    }
-}
-
-// Initialisation au chargement de la page
-document.addEventListener('DOMContentLoaded', loadPlayers);
+// Charger les joueurs au lancement
+loadPlayersForSetup();
