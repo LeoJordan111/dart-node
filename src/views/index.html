@@ -4,65 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
-    <title>02.Dart - Configuration</title>
+    <title>Darts</title>
 </head>
 <body>
 
     <main class="app-container">
+        <h1>🎯 Jeu de fléchette</h1>
         
-        <section class="setup-card">
-            <h1>👥 Gestion des Joueurs</h1>
-            <div id="register-form" class="input-group">
-                <input type="text" id="nickname" placeholder="Pseudo du joueur...">
-                <button class="btn-secondary" onclick="registerPlayer()">Ajouter</button>
-            </div>
-            <ul id="player-list"></ul>
-        </section>
-
-        <section id="setup-container" class="setup-card">
-            <h1>🎯 Configuration du Match</h1>
-            
-            <div class="form-group">
-                <label>Mode de jeu :</label>
-                <select id="game-type">
-                    <option value="301">301</option>
-                    <option value="501" selected>501</option>
-                    <option value="701">701</option>
-                    <option value="1001">1001</option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Sets gagnants :</label>
-                    <select id="sets-to-win">
-                        <option value="1">1</option>
-                        <option value="3">3</option>
-                        <option value="5">5</option>
-                    </select>
+        <div class="menu-grid">
+            <a href="/setup?mode=solo" class="menu-card">
+                <div class="icon">👤</div>
+                <div class="info">
+                    <h3>Entraînement Solo</h3>
+                    <p>Améliorez votre moyenne seul sur la cible.</p>
                 </div>
-                <div class="form-group">
-                    <label>Legs par Set :</label>
-                    <select id="legs-per-set">
-                        <option value="1">1</option>
-                        <option value="3">3</option>
-                        <option value="5">5</option>
-                    </select>
+            </a>
+
+            <a href="/setup?mode=pvp" class="menu-card">
+                <div class="icon">👥</div>
+                <div class="info">
+                    <h3>Joueur vs Joueur</h3>
+                    <p>Le mode classique pour défier vos amis.</p>
+                </div>
+            </a>
+
+            <div class="menu-card disabled">
+                <div class="icon">🤖</div>
+                <div class="info">
+                    <h3>Contre l'IA</h3>
+                    <p>(Bientôt disponible)</p>
                 </div>
             </div>
-
-            <div id="player-selection" class="form-group">
-                <label>Joueurs (Sélectionnez-en 2)</label>
-                <div id="player-checkboxes" class="checkbox-grid">
-                    </div>
-            </div>
-
-            <button class="btn-primary" onclick="startGame()">DÉMARRER LA PARTIE</button>
-        </section>
-
-        <section id="game-container" style="display:none;">
-            </section>
-
+        </div>
     </main>
 
     <script src="/js/main.js"></script>

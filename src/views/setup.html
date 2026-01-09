@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Configuration du Match</title>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="setup-title">Configuration</h1>
+
+        <div class="form-group">
+            <label>Points de départ</label>
+            <select id="game-type">
+                <option value="301">301</option>
+                <option value="501" selected>501</option>
+                <option value="701">701</option>
+                <option value="1001">1001</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Sets gagnants</label>
+                <select id="sets-to-win">
+                    <option value="1">1</option>
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Legs par Set</label>
+                <select id="legs-per-set">
+                    <option value="1">1</option>
+                    <option value="3" selected>3</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 1.5rem 0;">
+
+        <div class="form-group">
+            <label id="player-label">Sélectionner les joueurs</label>
+            <p id="instruction" style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
+                Choisissez 2 joueurs pour commencer.
+            </p>
+            <div id="player-checkboxes" class="player-grid">
+                </div>
+        </div>
+
+        <button class="btn-main" onclick="validateAndStart()">LANCER LE MATCH</button>
+        <p style="text-align: center; margin-top: 15px;">
+            <a href="/" style="color: #888; text-decoration: none; font-size: 0.9rem;">← Retour au menu</a>
+        </p>
+    </div>
+
+    <script src="/js/setup.js"></script>
+</body>
+</html>

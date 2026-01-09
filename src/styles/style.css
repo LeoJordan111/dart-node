@@ -1,111 +1,181 @@
 :root {
-  --primary-color: #2c3e50;
-  --accent-color: #27ae60;
-  --bg-color: #f4f7f6;
-  --text-color: #333;
+  /* Palette de couleurs "Gaming Modern" */
+  --primary: #6366f1;       /* Indigo */
+  --primary-dark: #4f46e5;
+  --accent: #10b981;        /* Vert émeraude */
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;     /* Ardoise sombre */
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  /* Police système native (Apple, Windows, Linux) */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  background-image: radial-gradient(circle at top right, #e2e8f0 0%, var(--bg-page) 100%);
+  color: var(--text-main);
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 20px;
 }
 
-/* Conteneur principal du Menu */
-#setup-screen {
-  background: white;
-  width: 90%;
-  max-width: 500px;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+/* Conteneur principal */
+.app-container, .container {
+  background: var(--bg-card);
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem;
+  border-radius: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
 }
 
 h1 {
   text-align: center;
-  color: var(--primary-color);
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 0px var(--border), 4px 4px 0px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
 }
 
-/* Groupes de formulaires */
+/* --- Menu Cards --- */
+.menu-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-card {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  text-decoration: none;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary);
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.1);
+}
+
+.menu-card .icon {
+  font-size: 2.2rem;
+  margin-right: 1.25rem;
+  background: #f1f5f9;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.menu-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.menu-card p {
+  margin: 4px 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.menu-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* --- Formulaires (Setup) --- */
 .form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
-.form-group label {
+label {
   display: block;
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--text-main);
 }
 
-select, input[type="number"] {
+select, input {
   width: 100%;
-  padding: 0.8rem;
-  border: 2px solid #ddd;
-  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  background-color: #fcfcfd;
 }
 
 select:focus, input:focus {
-  border-color: var(--accent-color);
   outline: none;
+  border-color: var(--primary);
+  background-color: #fff;
 }
 
-/* Zone de sélection des joueurs */
-#players-list-container {
+/* --- Bouton Principal --- */
+.btn-main {
+  width: 100%;
+  padding: 1.1rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+}
+
+.btn-main:hover {
+  background: var(--primary-dark);
+  transform: scale(1.01);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+}
+
+.btn-main:active {
+  transform: scale(0.98);
+}
+
+/* Grille de joueurs */
+.player-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Deux colonnes */
-  gap: 10px;
-  margin: 1rem 0;
-  padding: 10px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  max-height: 200px;
-  overflow-y: auto;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .player-option {
+  border: 2px solid var(--border);
+  padding: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  padding: 10px;
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 6px;
+  gap: 8px;
   cursor: pointer;
 }
 
-.player-option input {
-  margin-right: 10px;
-  transform: scale(1.2);
-}
-
-/* Bouton Démarrer */
-#btn-start {
-  width: 100%;
-  padding: 1rem;
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.1s, background 0.3s;
-  margin-top: 1rem;
-}
-
-#btn-start:hover {
-  background-color: #219150;
-}
-
-#btn-start:active {
-  transform: scale(0.98);
+.player-option:hover {
+  background-color: #f8fafc;
 }
