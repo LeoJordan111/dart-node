@@ -72,4 +72,35 @@
             }
         }
 
+        // Affiche ou cache le formulaire d'ajout
+        function toggleQuickAdd() {
+            const form = document.getElementById('quick-add-player');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Enregistre le joueur et rafraîchit la liste
+        async function addPlayerQuick() {
+            const nickname = document.getElementById('quick-nickname').value;
+            
+            if (!nickname) return alert("Veuillez entrer un pseudo");
+
+            try {
+                const response = await fetch('/api/players', { // Vérifie que c'est bien ta route POST pour les joueurs
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname })
+                });
+
+                if (response.ok) {
+                    document.getElementById('quick-nickname').value = ''; // Vide le champ
+                    toggleQuickAdd(); // Cache le formulaire
+                    await loadPlayers(); // Recharge la liste des joueurs sans rafraîchir la page
+                } else {
+                    alert("Erreur lors de la création du joueur");
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+            }
+        }
+
         window.onload = loadPlayers;

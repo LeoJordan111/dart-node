@@ -11,50 +11,60 @@
     <div class="container">
         <h1 id="setup-title">Configuration</h1>
 
-        <div class="form-group">
-            <label>Points de départ</label>
-            <select id="game-type">
-                <option value="301">301</option>
-                <option value="501" selected>501</option>
-                <option value="701">701</option>
-                <option value="1001">1001</option>
-            </select>
-        </div>
-
-        <div style="display: flex; gap: 15px;">
-            <div class="form-group" style="flex: 1;">
-                <label>Sets gagnants</label>
-                <select id="sets-to-win">
-                    <option value="1">1</option>
-                    <option value="3">3</option>
-                    <option value="5">5</option>
+        <div class="setup-section">
+            <div class="form-group">
+                <label>Points de départ</label>
+                <select id="game-type">
+                    <option value="301">301</option>
+                    <option value="501" selected>501</option>
+                    <option value="701">701</option>
+                    <option value="1001">1001</option>
                 </select>
             </div>
-            <div class="form-group" style="flex: 1;">
-                <label>Legs par Set</label>
-                <select id="legs-per-set">
-                    <option value="1">1</option>
-                    <option value="3" selected>3</option>
-                    <option value="5">5</option>
-                </select>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sets gagnants</label>
+                    <select id="sets-to-win">
+                        <option value="1">1</option>
+                        <option value="3">3</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Legs par Set</label>
+                    <select id="legs-per-set">
+                        <option value="1">1</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 1.5rem 0;">
+        <hr class="separator">
 
-        <div class="form-group">
-            <label id="player-label">Sélectionner les joueurs</label>
-            <p id="instruction" style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
-                Choisissez 2 joueurs pour commencer.
-            </p>
+        <div class="setup-section">
+            <div class="header-with-action">
+                <label id="player-label">Joueurs</label>
+                <button type="button" class="btn-add-quick" onclick="toggleQuickAdd()">+ Nouveau</button>
+            </div>
+
+            <div id="quick-add-player" class="quick-add-panel">
+                <input type="text" id="quick-nickname" placeholder="Pseudo du nouveau joueur...">
+                <button class="btn-save-quick" onclick="addPlayerQuick()">Enregistrer</button>
+            </div>
+
+            <p id="instruction" class="field-info">Choisissez les joueurs pour commencer.</p>
+            
             <div id="player-checkboxes" class="player-grid">
                 </div>
         </div>
 
-        <button class="btn-main" onclick="validateAndStart()">LANCER LE MATCH</button>
-        <p style="text-align: center; margin-top: 15px;">
-            <a href="/" style="color: #888; text-decoration: none; font-size: 0.9rem;">← Retour au menu</a>
-        </p>
+        <div class="setup-footer">
+            <button class="btn-main" onclick="validateAndStart()">LANCER LE MATCH</button>
+            <a href="/" class="link-back">← Retour au menu</a>
+        </div>
     </div>
 
     <script src="/js/setup.js"></script>

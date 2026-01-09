@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/game.css">
+    <title>Match en cours</title>
+</head>
+<body>
+
+    <main class="game-container">
+        <div class="container-score">
+            <h2 id="current-player-name">Joueur 1</h2>
+            <div id="main-score">501</div>
+        </div>
+
+        <div class="container-dart" id="current-throws">
+            <div class="dart">
+                <p>1</p>
+                <div class="score-input">-</div>
+                <div class="score-comeback">Retour</div>
+            </div>
+            <div class="dart">
+                <p>2</p>
+                <div class="score-input">-</div>
+                <div class="score-comeback">Retour</div>
+            </div>
+            <div class="dart">
+                <p>3</p>
+                <div class="score-input">-</div>
+                <div class="score-comeback">Retour</div>
+            </div>
+        </div>
+
+<div class="container-num" id="numbers-grid">
+    <div class="num">1</div><div class="num">2</div><div class="num">3</div><div class="num">4</div>
+    <div class="num">5</div><div class="num">6</div><div class="num">7</div><div class="num">8</div>
+    <div class="num">9</div><div class="num">10</div><div class="num">11</div><div class="num">12</div>
+    <div class="num">13</div><div class="num">14</div><div class="num">15</div><div class="num">16</div>
+    <div class="num">17</div><div class="num">18</div><div class="num">19</div><div class="num">20</div>
+    <div class="num bull">25</div>
+    <div class="num zero">0</div>
+</div>
+
+        <div class="container-multi">
+            <div class="num" id="double">DOUBLE</div>
+            <div class="num" id="triple">TRIPLE</div>
+        </div>
+
+        <div class="container-option">
+            <div class="num" id="validate-button">VALIDER</div>
+            <div class="num" id="btn-no-score">NO SCORE</div>
+        </div>
+
+        <div class="container-result">
+            <table class="result">
+                <thead>
+                    <tr>
+                        <th>Tour</th>
+                        <th>F1</th><th>F2</th><th>F3</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="dartsModal" class="modal">
+        <div class="modal-content">
+            <h2>Fin de Leg</h2>
+            <form id="dartsForm">
+                <div class="question-group">
+                    <p>Tentatives de double ?</p>
+                    <div class="radio-options">
+                        <label><input type="radio" name="checkoutDouble" value="1" required> 1</label>
+                        <label><input type="radio" name="checkoutDouble" value="2"> 2</label>
+                        <label><input type="radio" name="checkoutDouble" value="3"> 3</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Soumettre</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/game.js"></script>
+</body>
+</html>

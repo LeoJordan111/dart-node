@@ -179,3 +179,133 @@ select:focus, input:focus {
 .player-option:hover {
   background-color: #f8fafc;
 }
+
+.btn-add-quick {
+    background: #e2e8f0;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-quick:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Layout du formulaire */
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.setup-section {
+    margin-bottom: 20px;
+}
+
+.separator {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+    opacity: 0.5;
+}
+
+/* Header de section avec bouton à droite */
+.header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Panel d'ajout rapide */
+.quick-add-panel {
+    display: none; 
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    border: 1px dashed var(--primary);
+    width: 100%; 
+}
+
+.quick-add-panel input {
+    width: 100%;
+    margin-bottom: 10px;
+    display: block;
+    padding: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.btn-save-quick {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save-quick:hover {
+    background: var(--primary-dark);
+}
+
+/* Infos et liens */
+.field-info {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.setup-footer {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.link-back {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.link-back:hover {
+    color: var(--primary);
+}
+
+/* Bouton Nouveau Player */
+.btn-add-quick {
+    background: #eef2ff;
+    border: 1px solid var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.btn-add-quick:hover {
+    background: var(--primary);
+    color: white;
+}
