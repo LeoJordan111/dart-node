@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- INITIALISATION DES PARAMÈTRES URL ---
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('id');
+
     // --- SÉLECTEURS ---
+    const playerNameElement = document.getElementById('current-player-name');
     const mainScoreElement = document.getElementById('main-score');
     const scoreInputs = document.querySelectorAll('.score-input');
     const retourButtons = document.querySelectorAll('.score-comeback');
@@ -11,15 +16,111 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyBody = document.getElementById('history-body');
     const dartsForm = document.getElementById('dartsForm');
     const modal = document.getElementById('dartsModal');
+    const setDisplay = document.getElementById('set-count');
+    const legDisplay = document.getElementById('leg-count');
 
     // --- VARIABLES D'ÉTAT ---
+    const savedNickname = localStorage.getItem('currentPlayerNickname') || "Joueur 1";
+    playerNameElement.textContent = savedNickname;
+
     let currentMultiplier = 1;
     let dartsThrownThisRound = 0;
     let scoresThisRound = [0, 0, 0];
-    let totalLegScore = parseInt(mainScoreElement.textContent);
+    let totalLegScore = 501; 
     let roundNumber = 1;
+    
+    let setsWon = 0;
+    let legsWon = 0;
+    const SETS_TO_WIN_MATCH = parseInt(params.get('sets')) || 1; 
+    const LEGS_TO_WIN_SET = parseInt(params.get('legs')) || 1;
 
-    // --- FONCTIONS UTILES ---
+    let totalDartsCount = 0;      
+    let totalDoubleAttempts = 0;  
+    let totalPointsScored = 0; 
+
+    // --- FONCTIONS DE MATCH ---
+
+    function updateMatchDisplay() {
+        if (setDisplay) setDisplay.innerText = `Sets: ${setsWon}`;
+        if (legDisplay) legDisplay.innerText = `Legs: ${legsWon}`;
+    }
+
+    function startNewLeg() {
+        totalLegScore = 501;
+        mainScoreElement.textContent = "501";
+        roundNumber = 1;
+        dartsThrownThisRound = 0;
+        scoresThisRound = [0, 0, 0];
+        if (historyBody) historyBody.innerHTML = '';
+        scoreInputs.forEach(input => input.textContent = '-');
+        resetMultipliers();
+    }
+
+    async function saveGameStats() {
+        const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
+        const checkoutRate = totalDoubleAttempts > 0 
+            ? (((setsWon * LEGS_TO_WIN_SET) + legsWon) / totalDoubleAttempts * 100).toFixed(2) 
+            : 0;
+
+        const statsPayload = {
+            gameId: gameId,
+            winner: savedNickname,
+            totalDarts: totalDartsCount,
+            totalAttempts: totalDoubleAttempts,
+            checkoutRate: checkoutRate,
+            average: avg
+        };
+
+        try {
+            const response = await fetch(`/api/games/${gameId}/finish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(statsPayload)
+            });
+            if (response.ok) console.log("Stats enregistrées !");
+        } catch (err) {
+            console.error("Erreur stats:", err);
+        }
+    }
+
+    function showFinalStats() {
+        const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
+        const checkoutRate = totalDoubleAttempts > 0 
+            ? Math.round(((setsWon * LEGS_TO_WIN_SET) / totalDoubleAttempts) * 100) 
+            : 0;
+
+        document.getElementById('final-winner-name').innerText = savedNickname;
+        document.getElementById('stat-avg').innerText = avg;
+        document.getElementById('stat-checkout').innerText = checkoutRate + "%";
+        document.getElementById('stat-darts').innerText = totalDartsCount;
+        document.getElementById('stat-score').innerText = `${setsWon} Sets - ${legsWon} Legs`;
+
+        document.getElementById('stats-summary-overlay').style.display = 'flex';
+    }
+
+    // CORRECTION : Cette logique doit être DANS une fonction
+    function handleLegWin() {
+        legsWon++;
+        
+        if (legsWon === LEGS_TO_WIN_SET) {
+            setsWon++;
+            legsWon = 0;
+            if (setsWon < SETS_TO_WIN_MATCH) alert(`🏆 SET REMPORTÉ ! (${setsWon}/${SETS_TO_WIN_MATCH})`);
+        } else {
+            alert(`🎯 LEG REMPORTÉ ! (${legsWon}/${LEGS_TO_WIN_SET})`);
+        }
+
+        updateMatchDisplay();
+        
+        if (setsWon === SETS_TO_WIN_MATCH) {
+            saveGameStats(); 
+            showFinalStats(); 
+        } else {
+            startNewLeg();
+        }
+    }
+
+    // --- FONCTIONS TECHNIQUES ---
 
     function resetMultipliers() {
         currentMultiplier = 1;
@@ -31,12 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scoresThisRound[dartsThrownThisRound] = points;
         scoreInputs[dartsThrownThisRound].textContent = points;
         dartsThrownThisRound++;
+        totalPointsScored += points; 
     }
 
     function completeRound() {
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
-        
-        // Ajout à la table HTML
         const row = `<tr>
             <td>${roundNumber}</td>
             <td>${scoresThisRound[0]}</td>
@@ -46,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>`;
         historyBody.insertAdjacentHTML('afterbegin', row);
 
-        // Reset pour le prochain tour
         roundNumber++;
         dartsThrownThisRound = 0;
         scoresThisRound = [0, 0, 0];
@@ -55,24 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openModal() {
-        // On s'assure que la modale est visible
         modal.style.display = 'block';
-
-        const groupDarts = document.getElementById('group-darts-thrown');
-        
-        // Si on a fini le leg (score à 0)
-        if (totalLegScore === 0) {
-            document.getElementById('modal-title').innerText = "🎯 Leg Terminé !";
-            groupDarts.style.display = 'block'; // On montre les deux questions
-        } else {
-            document.getElementById('modal-title').innerText = "Statistiques de Checkout";
-            groupDarts.style.display = 'block'; // Tu as dit vouloir TOUJOURS les deux
-        }
+        const modalTitle = document.getElementById('modal-title');
+        modalTitle.innerText = (totalLegScore === 0) ? "🎯 Leg Terminé !" : "Statistiques de Checkout";
     }
 
-    // --- ÉCOUTEURS D'ÉVÉNEMENTS ---
+    // --- ÉCOUTEURS ---
 
-    // Multiplicateurs
     [doubleBtn, tripleBtn].forEach(btn => {
         btn.addEventListener('click', () => {
             const val = (btn.id === 'double') ? 2 : 3;
@@ -86,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Chiffres
     numButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             if (dartsThrownThisRound >= 3) return;
@@ -107,16 +194,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Miss
     noScoreBtn.addEventListener('click', () => {
         if (dartsThrownThisRound < 3) recordDart(0);
     });
 
-    // Retours individuels
     retourButtons.forEach((btn, index) => {
         btn.addEventListener('click', () => {
             if (dartsThrownThisRound > 0 && index === dartsThrownThisRound - 1) {
-                totalLegScore += scoresThisRound[index];
+                const pointsRemoved = scoresThisRound[index];
+                totalLegScore += pointsRemoved;
+                totalPointsScored -= pointsRemoved;
                 mainScoreElement.textContent = totalLegScore;
                 scoreInputs[index].textContent = '-';
                 scoresThisRound[index] = 0;
@@ -125,37 +212,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Validation du tour
     validateBtn.addEventListener('click', () => {
         if (dartsThrownThisRound === 0) return;
-
         const scoreTotalTour = scoresThisRound.reduce((a, b) => a + b, 0);
         const scoreAuDebutDuTour = totalLegScore + scoreTotalTour;
 
-        // Modale si zone de checkout ou fini
         if (scoreAuDebutDuTour <= 170 || totalLegScore === 0) {
             openModal();
         } else {
+            totalDartsCount += dartsThrownThisRound; 
             completeRound();
         }
     });
 
-    // Formulaire Modale
     dartsForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
-        const doublesAttempted = document.querySelector('input[name="checkoutDouble"]:checked').value;
-        const totalDartsThrown = document.querySelector('input[name="dartsCount"]:checked').value;
+        const doublesAttempted = parseInt(document.querySelector('input[name="checkoutDouble"]:checked').value);
+        const dartsInThisRound = parseInt(document.querySelector('input[name="dartsCount"]:checked').value);
+
+        totalDartsCount += dartsInThisRound;
+        totalDoubleAttempts += doublesAttempted;
 
         modal.style.display = 'none';
+        const isLegOver = (totalLegScore === 0);
         completeRound();
 
-        if (totalLegScore === 0) {
-            setTimeout(() => {
-                alert("🎯 Partie terminée !");
-                window.location.href = "/";
-            }, 200);
-        }
+        if (isLegOver) handleLegWin();
         e.target.reset();
     });
+    
+    updateMatchDisplay();
 });

@@ -10,6 +10,9 @@
 
     <main class="game-container">
         <div class="container-score">
+            <div class="match-meta">
+                <span id="set-count">Sets: 0</span> — <span id="leg-count">Legs: 0</span>
+            </div>
             <h2 id="current-player-name">Joueur 1</h2>
             <div id="main-score">501</div>
         </div>
@@ -92,6 +95,37 @@
 
                 <button type="submit" class="btn-submit" style="margin-top: 20px;">VALIDER</button>
             </form>
+        </div>
+    </div>
+
+    <div id="stats-summary-overlay" class="stats-overlay">
+        <div class="stats-card">
+            <div class="stats-header">
+                <span class="trophy">🏆</span>
+                <h2 id="final-winner-name">NOM DU JOUEUR</h2>
+                <p>Match Terminé</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Moyenne (PPD)</span>
+                    <span class="stat-value" id="stat-avg">0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Doubles (%)</span>
+                    <span class="stat-value" id="stat-checkout">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Fléchettes</span>
+                    <span class="stat-value" id="stat-darts">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Sets - Legs</span>
+                    <span class="stat-value" id="stat-score">0 - 0</span>
+                </div>
+            </div>
+
+            <button onclick="window.location.href='/'" class="btn-main">RETOURNER AU MENU</button>
         </div>
     </div>
 
