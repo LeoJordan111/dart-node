@@ -56,7 +56,7 @@
                 setsToWin: parseInt(document.getElementById('sets-to-win').value),
                 legsPerSet: parseInt(document.getElementById('legs-per-set').value),
                 playerIds: checked,
-                mode: mode // Utile pour ton futur Bot ou Solo
+                mode: mode
             };
 
             const res = await fetch('/api/games/create', {
@@ -67,7 +67,6 @@
 
             if (res.ok) {
                 const game = await res.json();
-                // On redirige vers la page de jeu en passant l'ID de la partie
                 window.location.href = `/game?id=${game.id}`;
             }
         }
@@ -85,16 +84,16 @@
             if (!nickname) return alert("Veuillez entrer un pseudo");
 
             try {
-                const response = await fetch('/api/players', { // Vérifie que c'est bien ta route POST pour les joueurs
+                const response = await fetch('/api/players', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nickname })
                 });
 
                 if (response.ok) {
-                    document.getElementById('quick-nickname').value = ''; // Vide le champ
-                    toggleQuickAdd(); // Cache le formulaire
-                    await loadPlayers(); // Recharge la liste des joueurs sans rafraîchir la page
+                    document.getElementById('quick-nickname').value = '';
+                    toggleQuickAdd(); 
+                    await loadPlayers(); 
                 } else {
                     alert("Erreur lors de la création du joueur");
                 }

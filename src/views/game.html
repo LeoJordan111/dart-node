@@ -69,17 +69,28 @@
 
     <div id="dartsModal" class="modal">
         <div class="modal-content">
-            <h2>Fin de Leg</h2>
+            <h2 id="modal-title">Statistiques du tour</h2>
             <form id="dartsForm">
-                <div class="question-group">
-                    <p>Tentatives de double ?</p>
+                <div class="question-group" id="group-doubles">
+                    <p>Combien de <strong>tentatives de double</strong> ?</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="checkoutDouble" value="1" required> 1</label>
+                        <label><input type="radio" name="checkoutDouble" value="0" required> 0</label>
+                        <label><input type="radio" name="checkoutDouble" value="1"> 1</label>
                         <label><input type="radio" name="checkoutDouble" value="2"> 2</label>
                         <label><input type="radio" name="checkoutDouble" value="3"> 3</label>
                     </div>
                 </div>
-                <button type="submit" class="btn-submit">Soumettre</button>
+
+                <div class="question-group" id="group-darts-thrown" style="margin-top: 15px;">
+                    <p>Combien de <strong>fléchettes lancées</strong> au total ce tour ?</p>
+                    <div class="radio-options">
+                        <label><input type="radio" name="dartsCount" value="1" required> 1</label>
+                        <label><input type="radio" name="dartsCount" value="2"> 2</label>
+                        <label><input type="radio" name="dartsCount" value="3"> 3</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" style="margin-top: 20px;">VALIDER</button>
             </form>
         </div>
     </div>

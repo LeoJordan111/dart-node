@@ -1,11 +1,11 @@
 :root {
   /* Palette de couleurs "Gaming Modern" */
-  --primary: #6366f1;       /* Indigo */
+  --primary: #6366f1;      
   --primary-dark: #4f46e5;
-  --accent: #10b981;        /* Vert émeraude */
+  --accent: #10b981;       
   --bg-page: #f8fafc;
   --bg-card: #ffffff;
-  --text-main: #0f172a;     /* Ardoise sombre */
+  --text-main: #0f172a;     
   --text-muted: #64748b;
   --border: #e2e8f0;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
