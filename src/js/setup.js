@@ -48,15 +48,22 @@ async function validateAndStart() {
     const checkedInputs = Array.from(document.querySelectorAll('input[name="players"]:checked'));
     const limit = (mode === 'solo') ? 1 : 2;
 
+    // 1. On vérifie d'abord si le nombre de joueurs est correct
     if (checkedInputs.length !== limit) {
         return alert(`Veuillez sélectionner exactement ${limit} joueur(s).`);
     }
 
-    // --- STOCKAGE DU NICKNAME (Pour le mode Solo) ---
-    // On prend le nickname du premier joueur sélectionné
-    const nickname = checkedInputs[0].getAttribute('data-nickname');
-    localStorage.setItem('currentPlayerNickname', nickname);
+    // 2. Maintenant qu'on est sûr qu'ils existent, on stocke les noms
+    if (mode === 'solo') {
+        const name1 = checkedInputs[0].getAttribute('data-nickname');
+        localStorage.setItem('player1_name', name1);
+        localStorage.setItem('currentPlayerNickname', name1); // Pour ton ancien code solo
+    } else {
+        localStorage.setItem('player1_name', checkedInputs[0].getAttribute('data-nickname'));
+        localStorage.setItem('player2_name', checkedInputs[1].getAttribute('data-nickname'));
+    }
 
+    // 3. Préparation des données pour le serveur
     const payload = {
         type: document.getElementById('game-type').value,
         setsToWin: parseInt(document.getElementById('sets-to-win').value),
@@ -65,6 +72,7 @@ async function validateAndStart() {
         mode: mode
     };
 
+    // 4. Envoi au serveur
     try {
         const res = await fetch('/api/games/create', {
             method: 'POST',
@@ -74,8 +82,8 @@ async function validateAndStart() {
 
         if (res.ok) {
             const game = await res.json();
-            // On passe aussi les paramètres de sets/legs à l'URL pour game.js
-            window.location.href = `/game?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}`;
+            // On ajoute le "type" (301, 501...) dans l'URL pour gameEngine.js
+            window.location.href = `/game?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}`;
         }
     } catch (err) {
         console.error("Erreur lors de la création de la partie:", err);
@@ -95,16 +103,17 @@ async function addPlayerQuick() {
     if (!nickname) return alert("Veuillez entrer un pseudo");
 
     try {
-        const response = await fetch('/api/players', { 
+        // AJOUT DE /register ICI
+        const response = await fetch('/api/players/register', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nickname })
+            body: JSON.stringify({ nickname }) // On envoie juste le pseudo
         });
 
         if (response.ok) {
             nicknameInput.value = '';
             toggleQuickAdd(); 
-            await loadPlayers(); 
+            await loadPlayers(); // Recharge la liste pour voir le nouveau joueur
         } else {
             alert("Erreur lors de la création du joueur");
         }

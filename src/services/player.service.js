@@ -3,8 +3,7 @@ const prisma = require('../database/client');
 const createPlayer = async (nickname, email) => {
   return await prisma.player.create({
     data: {
-      nickname,
-      email
+      nickname
     },
   });
 };

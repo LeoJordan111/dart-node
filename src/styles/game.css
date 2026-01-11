@@ -279,3 +279,70 @@
 
 .stat-label { font-size: 0.8rem; color: var(--text-muted); display: block; }
 .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
+
+/* --- INDICATEUR DE TOUR --- */
+#current-player-name {
+    transition: all 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: inline-block;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Style quand c'est le Joueur 1 */
+.player-1-turn {
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom: 4px solid #6366f1;
+}
+
+/* Style quand c'est le Joueur 2 */
+.player-2-turn {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    border-bottom: 4px solid #10b981;
+}
+
+/* --- BOUTONS MULTIPLICATEURS ACTIFS --- */
+#double.active {
+    background-color: #f59e0b !important; /* Orange */
+    color: white;
+    transform: scale(1.05);
+}
+
+#triple.active {
+    background-color: #ef4444 !important; /* Rouge */
+    color: white;
+    transform: scale(1.05);
+}
+
+/* --- AFFICHAGE DES SCORES F1, F2, F3 --- */
+.score-inputs-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.score-input {
+    width: 60px;
+    height: 60px;
+    background: #f1f5f9;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #475569;
+}
+
+/* Quand une fléchette est enregistrée */
+.score-input:not(:empty):not(.empty-text) {
+    border-style: solid;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
