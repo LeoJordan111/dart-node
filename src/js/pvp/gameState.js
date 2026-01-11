@@ -21,7 +21,7 @@ const createPlayer = (id, nickname) => ({
 export let state = {
     players: [],
     currentPlayerIndex: 0,
-    startingPlayerIndex: 0, // Qui a commencé le Leg actuel
+    startingPlayerIndex: 0,
     roundNumber: 1,
     isMatchOver: false,
     config: {
@@ -49,7 +49,7 @@ export function setupMatch(p1Name, p2Name, sets, legs) {
 
     state.config.setsToWin = sets;
     state.config.legsPerSet = legs;
-    state.startingPlayerIndex = 0; // Le joueur 1 commence le match
+    state.startingPlayerIndex = 0;
     state.currentPlayerIndex = 0;
     state.roundNumber = 1;
     state.isMatchOver = false;
@@ -120,4 +120,12 @@ export function resetScoresForNewLeg(startScore = 501) {
     
     state.roundNumber = 1;
     state.isMatchOver = false;
+}
+
+// Annule les points de la dernière fléchette pour le joueur actif
+export function undoLastDartScore(points) {
+    const player = getActivePlayer();
+    player.score += points; // On rend les points
+    player.stats.pointsScored -= points;
+    if (player.stats.totalDarts > 0) player.stats.totalDarts--;
 }
