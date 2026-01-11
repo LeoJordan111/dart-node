@@ -10,11 +10,42 @@
 
     <main class="game-container">
         <div class="container-score">
-            <div class="match-meta">
-                <span id="set-count">Sets: 0</span> — <span id="leg-count">Legs: 0</span>
+            <div id="score-layout-solo">
+                <div class="match-meta">
+                    <span id="set-count-solo">Sets: 0</span> — <span id="leg-count-solo">Legs: 0</span>
+                </div>
+                <h2 id="current-player-name-solo">Joueur 1</h2>
             </div>
-            <h2 id="current-player-name">Joueur 1</h2>
-            <div id="main-score">501</div>
+
+            <div id="score-layout-pvp">
+                <div class="match-meta-pvp">
+                    <div class="player-info" id="p1-info">
+                        <span class="p-name">
+                            <span class="starter-indicator">🎯</span> Joueur 1
+                        </span>
+                        <div class="p-stats">
+                            <span class="p-sets">S: 0</span> | <span class="p-legs">L: 0</span>
+                        </div>
+                        <div class="p-current-score">501</div>
+                    </div>
+
+                    <div class="vs-divider">VS</div>
+
+                    <div class="player-info" id="p2-info">
+                            <span class="p-name">
+                            <span class="starter-indicator">🎯</span> Joueur 2
+                        </span>
+                        <div class="p-stats">
+                            <span class="p-sets">S: 0</span> | <span class="p-legs">L: 0</span>
+                        </div>
+                        <div class="p-current-score">501</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="main-score-wrapper">
+                <div id="main-score">501</div>
+            </div>
         </div>
 
         <div class="container-dart" id="current-throws">
@@ -35,15 +66,15 @@
             </div>
         </div>
 
-<div class="container-num" id="numbers-grid">
-    <div class="num">1</div><div class="num">2</div><div class="num">3</div><div class="num">4</div>
-    <div class="num">5</div><div class="num">6</div><div class="num">7</div><div class="num">8</div>
-    <div class="num">9</div><div class="num">10</div><div class="num">11</div><div class="num">12</div>
-    <div class="num">13</div><div class="num">14</div><div class="num">15</div><div class="num">16</div>
-    <div class="num">17</div><div class="num">18</div><div class="num">19</div><div class="num">20</div>
-    <div class="num bull">25</div>
-    <div class="num zero">0</div>
-</div>
+        <div class="container-num" id="numbers-grid">
+            <div class="num">1</div><div class="num">2</div><div class="num">3</div><div class="num">4</div>
+            <div class="num">5</div><div class="num">6</div><div class="num">7</div><div class="num">8</div>
+            <div class="num">9</div><div class="num">10</div><div class="num">11</div><div class="num">12</div>
+            <div class="num">13</div><div class="num">14</div><div class="num">15</div><div class="num">16</div>
+            <div class="num">17</div><div class="num">18</div><div class="num">19</div><div class="num">20</div>
+            <div class="num bull">25</div>
+            <div class="num zero">0</div>
+        </div>
 
         <div class="container-multi">
             <div class="num" id="double">DOUBLE</div>
@@ -64,8 +95,7 @@
                         <th>Total</th>
                     </tr>
                 </thead>
-                <tbody id="history-body">
-                    </tbody>
+                <tbody id="history-body"></tbody>
             </table>
         </div>
     </main>
@@ -84,8 +114,8 @@
                     </div>
                 </div>
 
-                <div class="question-group" id="group-darts-thrown" style="margin-top: 15px;">
-                    <p>Combien de <strong>fléchettes lancées</strong> au total ce tour ?</p>
+                <div class="question-group" id="group-darts-thrown">
+                    <p>Combien de <strong>fléchettes lancées</strong> au total ?</p>
                     <div class="radio-options">
                         <label><input type="radio" name="dartsCount" value="1" required> 1</label>
                         <label><input type="radio" name="dartsCount" value="2"> 2</label>
@@ -93,7 +123,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit" style="margin-top: 20px;">VALIDER</button>
+                <button type="submit" class="btn-submit">VALIDER</button>
             </form>
         </div>
     </div>
@@ -125,11 +155,14 @@
                 </div>
             </div>
 
-            <button onclick="window.location.href='/'" class="btn-main">RETOURNER AU MENU</button>
+            <button onclick="window.location.href='/'" class="btn-submit">RETOURNER AU MENU</button>
         </div>
     </div>
 
-    <!-- <script src="/js/game.js"></script> -->
     <script type="module" src="/js/pvp/gameEngine.js"></script>
 </body>
 </html>
+
+
+
+ <!-- <script src="/js/game.js"></script> -->

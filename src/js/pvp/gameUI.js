@@ -1,43 +1,97 @@
+// IMPORTATION NÉCESSAIRE pour accéder aux scores des deux joueurs en PvP
+import * as GameState from './gameState.js';
+
 /**
  * GESTION DE L'INTERFACE UTILISATEUR (DOM)
  */
 export const UI = {
-    // Sélecteurs mis en cache pour la performance
+    // Sélecteurs mis en cache
     elements: {
-        playerName: document.getElementById('current-player-name'),
         mainScore: document.getElementById('main-score'),
-        setCount: document.getElementById('set-count'),
-        legCount: document.getElementById('leg-count'),
         historyBody: document.getElementById('history-body'),
         scoreInputs: document.querySelectorAll('.score-input'),
         modal: document.getElementById('dartsModal')
     },
 
     /**
-     * Met à jour le bloc score principal
+     * Met à jour le bloc score principal (Solo ou PvP)
      */
     refreshScoreBoard: (activePlayer) => {
-        UI.elements.playerName.textContent = activePlayer.name;
-        UI.elements.mainScore.textContent = activePlayer.score;
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode') || 'pvp';
 
-        UI.elements.playerName.style.color = (activePlayer.id === 1) ? "var(--primary)" : "var(--accent)";
-        
-        if(UI.elements.setCount) UI.elements.setCount.textContent = `Sets: ${activePlayer.sets}`;
-        if(UI.elements.legCount) UI.elements.legCount.textContent = `Legs: ${activePlayer.legs}`;
+        // 1. Mise à jour du score principal (le gros score au milieu)
+        if (UI.elements.mainScore) {
+            UI.elements.mainScore.textContent = activePlayer.score;
+        }
+
+        // 2. Gestion des layouts selon le mode
+        const layoutSolo = document.getElementById('score-layout-solo');
+        const layoutPvp = document.getElementById('score-layout-pvp');
+
+        if (mode === 'solo') {
+            if (layoutSolo) layoutSolo.style.display = 'block';
+            if (layoutPvp) layoutPvp.style.display = 'none';
+            
+            // Mise à jour textes Solo
+            const nameSolo = document.getElementById('current-player-name-solo');
+            const setSolo = document.getElementById('set-count-solo');
+            const legSolo = document.getElementById('leg-count-solo');
+
+            if (nameSolo) nameSolo.textContent = activePlayer.name;
+            if (setSolo) setSolo.textContent = `Sets: ${activePlayer.sets}`;
+            if (legSolo) legSolo.textContent = `Legs: ${activePlayer.legs}`;
+            
+        } else {
+            // --- MODE PVP ---
+            if (layoutSolo) layoutSolo.style.display = 'none';
+            if (layoutPvp) layoutPvp.style.display = 'block';
+
+            // Mise à jour des deux blocs PvP
+            GameState.state.players.forEach((p, index) => {
+                const playerNum = index + 1;
+                const container = document.getElementById(`p${playerNum}-info`);
+                
+                if (container) {
+                    // Nom, Sets et Legs
+                    container.querySelector('.p-name').textContent = p.name;
+                    container.querySelector('.p-sets').textContent = `S: ${p.sets}`;
+                    container.querySelector('.p-legs').textContent = `L: ${p.legs}`;
+
+                    // MISE À JOUR DU SCORE INDIVIDUEL (Sous le nom)
+                    const individualScore = container.querySelector('.p-current-score');
+                    if (individualScore) {
+                        individualScore.textContent = p.score;
+                    }
+
+                    // Mise en évidence du joueur actif
+                    if (p.id === activePlayer.id) {
+                        container.classList.add('active');
+                    } else {
+                        container.classList.remove('active');
+                    }
+                }
+            });
+        }
     },
 
     /**
      * Met à jour une des 3 cases F1, F2 ou F3
      */
     updateDartInputs: (dartIndex, points) => {
-        if (UI.elements.scoreInputs[dartIndex]) {
-            UI.elements.scoreInputs[dartIndex].textContent = points;
-            UI.elements.scoreInputs[dartIndex].classList.add('filled');
+        const input = UI.elements.scoreInputs[dartIndex];
+        if (input) {
+            input.textContent = points;
+            if (points === "-") {
+                input.classList.remove('filled');
+            } else {
+                input.classList.add('filled');
+            }
         }
     },
 
     /**
-     * UNIQUE MÉTHODE POUR VIDER LES INPUTS
+     * Vide les inputs de fléchettes
      */
     clearDartInputs: () => {
         UI.elements.scoreInputs.forEach(input => {
@@ -60,32 +114,27 @@ export const UI = {
                 <td><strong>${total}</strong></td>
             </tr>
         `;
-        UI.elements.historyBody.insertAdjacentHTML('afterbegin', html);
+        if (UI.elements.historyBody) {
+            UI.elements.historyBody.insertAdjacentHTML('afterbegin', html);
+        }
     },
 
     /**
      * Gestion des Modales
      */
     openModal: (isWin) => {
-        UI.elements.modal.style.display = 'block';
-        const title = document.getElementById('modal-title');
-        if(title) title.innerText = isWin ? "🎯 Leg Terminé !" : "Statistiques de Fin de Tour";
+        if (UI.elements.modal) {
+            UI.elements.modal.style.display = 'block';
+            const title = document.getElementById('modal-title');
+            if (title) title.innerText = isWin ? "🎯 Leg Terminé !" : "Statistiques de Fin de Tour";
+        }
     },
 
     closeModal: () => {
-        UI.elements.modal.style.display = 'none';
-        const form = document.getElementById('dartsForm');
-        if(form) form.reset();
-    },
-
-    /**
-     * Met en évidence le joueur actif via une classe CSS
-     */
-    highlightActivePlayer: (activeIndex) => {
-        // On enlève les deux classes avant de mettre la bonne
-        UI.elements.playerName.classList.remove('player-1-turn', 'player-2-turn');
-        
-        const className = (activeIndex === 0) ? 'player-1-turn' : 'player-2-turn';
-        UI.elements.playerName.classList.add(className);
+        if (UI.elements.modal) {
+            UI.elements.modal.style.display = 'none';
+            const form = document.getElementById('dartsForm');
+            if (form) form.reset();
+        }
     }
 };

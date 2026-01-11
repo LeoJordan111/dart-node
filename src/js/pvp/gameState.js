@@ -21,7 +21,7 @@ const createPlayer = (id, nickname) => ({
 export let state = {
     players: [],
     currentPlayerIndex: 0,
-    startingPlayerIndex: 0,
+    startingPlayerIndex: 0, // C'est l'index du joueur qui a le starter (🎯)
     roundNumber: 1,
     isMatchOver: false,
     config: {
@@ -31,10 +31,9 @@ export let state = {
 };
 
 /**
- * ACTIONS (Fonctions de modification)
+ * ACTIONS
  */
 
-// Initialise les joueurs et la configuration au lancement du match
 export function setupMatch(p1Name, p2Name, sets, legs) {
     const params = new URLSearchParams(window.location.search);
     const startScore = parseInt(params.get('startScore')) || 501;
@@ -44,29 +43,26 @@ export function setupMatch(p1Name, p2Name, sets, legs) {
         createPlayer(2, p2Name)
     ];
 
-    // On applique le score de départ à tout le monde
     state.players.forEach(p => p.score = startScore);
 
     state.config.setsToWin = sets;
     state.config.legsPerSet = legs;
-    state.startingPlayerIndex = 0;
+    
+    // Au début du match, le Joueur 1 commence
+    state.startingPlayerIndex = 0; 
     state.currentPlayerIndex = 0;
     state.roundNumber = 1;
     state.isMatchOver = false;
 }
 
-// Retourne l'objet du joueur qui doit lancer
 export function getActivePlayer() {
     return state.players[state.currentPlayerIndex];
 }
 
-// Retourne l'objet du joueur qui attend
 export function getWaitingPlayer() {
-    const waitingIndex = state.currentPlayerIndex === 0 ? 1 : 0;
-    return state.players[waitingIndex];
+    return state.players[state.currentPlayerIndex === 0 ? 1 : 0];
 }
 
-// Alterne les joueurs à l'intérieur d'un tour
 export function nextTurn() {
     if (state.currentPlayerIndex === 1) {
         state.roundNumber++;
@@ -74,7 +70,6 @@ export function nextTurn() {
     state.currentPlayerIndex = state.currentPlayerIndex === 0 ? 1 : 0;
 }
 
-// Applique le score et met à jour les stats de points
 export function updatePlayerScore(points) {
     const player = getActivePlayer();
     player.score -= points;
@@ -82,19 +77,21 @@ export function updatePlayerScore(points) {
 }
 
 /**
- * GESTION DES VICTOIRES DE MANCHES (LEGS ET SETS)
+ * GESTION DES VICTOIRES
  */
 export function winLeg(player) {
     player.legs++;
+
+    // Alternance du starter pour la manche suivante
+    state.startingPlayerIndex = (state.startingPlayerIndex === 0) ? 1 : 0;
     
-    // Vérifier si le set est gagné
+    // Le joueur qui commence la nouvelle manche est le nouveau starter
+    state.currentPlayerIndex = state.startingPlayerIndex;
+
     if (player.legs >= state.config.legsPerSet) {
         player.sets++;
-        
-        // Remet les legs à 0 pour les deux joueurs pour le nouveau set
         state.players.forEach(p => p.legs = 0);
         
-        // Vérifier si le match est gagné
         if (player.sets >= state.config.setsToWin) {
             state.isMatchOver = true;
             return "MATCH_OVER";
@@ -105,27 +102,20 @@ export function winLeg(player) {
 }
 
 /**
- * RÉINITIALISATION POUR NOUVEAU LEG (AVEC ALTERNANCE)
+ * RÉINITIALISATION POUR NOUVEAU LEG
  */
 export function resetScoresForNewLeg(startScore = 501) {
-    // 1. Remettre les scores au départ
     state.players.forEach(p => p.score = startScore);
     
-    // 2. Alterner le joueur qui commence le Leg
-    // Si l'index de départ était 0 (J1), il devient 1 (J2) et vice-versa
-    state.startingPlayerIndex = (state.startingPlayerIndex === 0) ? 1 : 0;
-    
-    // 3. Le joueur courant devient celui qui commence
+    // On s'assure que le tour revient bien au starter actuel
     state.currentPlayerIndex = state.startingPlayerIndex;
-    
     state.roundNumber = 1;
     state.isMatchOver = false;
 }
 
-// Annule les points de la dernière fléchette pour le joueur actif
 export function undoLastDartScore(points) {
     const player = getActivePlayer();
-    player.score += points; // On rend les points
+    player.score += points;
     player.stats.pointsScored -= points;
     if (player.stats.totalDarts > 0) player.stats.totalDarts--;
 }
