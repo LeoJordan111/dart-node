@@ -62,8 +62,7 @@ body {
     padding: 10px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    /* On s'assure que rien ne dépasse sur les côtés */
-    overflow: visible; 
+    overflow: visible;
 }
 
 .player-info {
@@ -73,44 +72,52 @@ body {
 }
 
 /* Alignements spécifiques par joueur */
-#p1-info { align-items: flex-start; text-align: left; }
-#p2-info { align-items: flex-end; text-align: right; }
+#p1-info { 
+    align-items: flex-start;
+     text-align: left; 
+}
+#p2-info { 
+    align-items: flex-end; 
+    text-align: right; 
+}
 
-/* LE NOM : l'ancre pour la fléchette */
+/* LE NOM : l'ancre pour l'icône */
 .p-name { 
     font-weight: bold; 
     font-size: 1.1rem; 
     color: #ccc;
-    position: relative; 
+    position: relative;
     display: inline-block;
-    white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
-/* LA FLÉCHETTE : Le starter-indicator */
-.starter-indicator {
+
+.starter-indicator { 
+    display: none !important; 
+}
+
+.player-info.is-starter .p-name::after {
+    content: "🎯"; 
     position: absolute;
-    display: none; /* Masqué par défaut */
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1rem;
-    z-index: 5;
+    font-size: 0.9rem;
+    z-index: 10;
 }
 
-/* Affichage quand le JS ajoute la classe .is-starter */
-.player-info.is-starter .starter-indicator {
-    display: block !important;
-}
-
-/* Positionnement : à GAUCHE du nom pour le Joueur 1 */
-#p1-info .starter-indicator {
+#p1-info.is-starter .p-name::after {
     right: 100%;
     margin-right: 8px;
 }
 
-/* Positionnement : à DROITE du nom pour le Joueur 2 */
-#p2-info .starter-indicator {
+#p2-info.is-starter .p-name::after {
     left: 100%;
     margin-left: 8px;
+}
+
+.player-info.is-starter .p-name {
+    color: white;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .p-stats { 
@@ -124,13 +131,10 @@ body {
     margin-top: 2px;
     font-family: 'Orbitron', sans-serif;
     width: 100%;
+    transition: all 0.3s ease;
 }
 
-/* État actif (celui qui joue) */
-.player-info.active .p-name { color: white; }
-.player-info.active .p-current-score { color: yellow; }
-
-/* Joueur actif */
+/* État actif (celui qui est en train de lancer ses 3 fléchettes) */
 .player-info.active .p-name { 
     color: white; 
 }
@@ -138,17 +142,17 @@ body {
 .player-info.active .p-current-score {
     color: yellow;
     transform: scale(1.1);
-    transition: all 0.3s ease;
 }
 
 #p1-info .p-current-score {
-    padding-left: 8px; 
+    padding-left: 0;
 }
 
 .vs-divider {
     padding: 0 15px;
     font-style: italic;
     font-weight: bold;
+    color: white;
 }
 
 /* --- ZONE DES 3 FLÉCHETTES --- */
