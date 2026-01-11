@@ -20,7 +20,6 @@ export const UI = {
         UI.elements.playerName.textContent = activePlayer.name;
         UI.elements.mainScore.textContent = activePlayer.score;
 
-        // Couleur selon l'ID du joueur
         UI.elements.playerName.style.color = (activePlayer.id === 1) ? "var(--primary)" : "var(--accent)";
         
         if(UI.elements.setCount) UI.elements.setCount.textContent = `Sets: ${activePlayer.sets}`;

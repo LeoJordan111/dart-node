@@ -1,4 +1,4 @@
-import { state, setupMatch, getActivePlayer, nextTurn, updatePlayerScore } from './gameState.js';
+import { state, setupMatch, getActivePlayer, nextTurn, updatePlayerScore, winLeg, resetScoresForNewLeg } from './gameState.js';
 import { UI } from './gameUI.js';
 
 // --- VARIABLES LOCALES AU TOUR ---
@@ -12,6 +12,7 @@ let currentMultiplier = 1;
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     
+    // Initialisation avec les paramètres de l'URL
     setupMatch(
         localStorage.getItem('player1_name') || "Joueur 1",
         localStorage.getItem('player2_name') || "Joueur 2",
@@ -28,24 +29,24 @@ function refreshView() {
 }
 
 /**
- * GESTION DES CLICS (Fusionnée et sécurisée)
+ * GESTION DES CLICS
  */
 function bindEvents() {
     // 1. Chiffres 0-25
     document.querySelectorAll('.container-num .num').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Sécurité match fini
+            // Sécurité : on ne joue pas si le match est fini ou si on a déjà lancé 3 fléchettes
             if (state.isMatchOver || dartsThrownThisRound >= 3) return;
 
             const val = parseInt(btn.textContent);
             const points = val * currentMultiplier;
             const player = getActivePlayer();
 
-            // Logique de "Bust"
+            // Logique de "Bust" (Trop de points ou reste 1)
             if (player.score - points < 0 || player.score - points === 1) {
-                // On annule les points restants du tour mais on compte les fléchettes
-                processDart(0);
-                // Optionnel: On pourrait forcer la validation ici car le tour est cassé
+                processDart(0); // On enregistre 0 points
+                // On peut s'arrêter là pour ce tour
+                dartsThrownThisRound = 3; 
             } else {
                 updatePlayerScore(points);
                 processDart(points);
@@ -54,10 +55,9 @@ function bindEvents() {
             currentMultiplier = 1; 
             refreshView();
 
-            // Victoire immédiate si score tombe à 0 sans attendre de valider le tour entier
+            // Si le joueur arrive à 0, on ouvre la modale de validation de fin de leg
             if (player.score === 0) {
-                state.isMatchOver = true;
-                setTimeout(() => UI.openModal(true), 500); // Ouvre la modale de fin
+                setTimeout(() => UI.openModal(true), 300);
             }
         });
     });
@@ -70,61 +70,94 @@ function bindEvents() {
         if (!state.isMatchOver) currentMultiplier = 3;
     });
 
-    // 3. Bouton Valider
+    // 3. Bouton Valider (Sous le pavé numérique)
     document.getElementById('validate-button').addEventListener('click', () => {
         if (state.isMatchOver || dartsThrownThisRound === 0) return;
 
         const player = getActivePlayer();
+        const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         
-        // Si fini ou checkout possible, on passe par la modale
-        if (player.score === 0 || (player.score + scoresThisRound.reduce((a,b)=>a+b,0)) <= 170) {
+        // Si le score est 0 ou si checkout possible (score avant tour <= 170)
+        if (player.score === 0 || (player.score + totalRound) <= 170) {
             UI.openModal(player.score === 0);
         } else {
             completeTurn();
         }
     });
 
-    // 4. Formulaire de la Modale
+    // 4. Formulaire de la Modale (Stats de fin de tour)
     document.getElementById('dartsForm').addEventListener('submit', (e) => {
         e.preventDefault();
         UI.closeModal();
-        if (state.isMatchOver) {
-            handleMatchWin(getActivePlayer());
+        
+        const player = getActivePlayer();
+        
+        // Si le joueur a fini sa manche
+        if (player.score === 0) {
+            const result = winLeg(player);
+            
+            if (result === "MATCH_OVER") {
+                handleMatchWin(player);
+            } else {
+                // Nouveau Leg ou Nouveau Set
+                const params = new URLSearchParams(window.location.search);
+                const startScore = parseInt(params.get('startScore')) || 501;
+                
+                alert(`${player.name} gagne la manche !`);
+                resetScoresForNewLeg(startScore);
+                
+                resetRoundState();
+                refreshView();
+            }
         } else {
+            // Tour normal après modale checkout raté
             completeTurn();
         }
     });
 }
 
+/**
+ * LOGIQUE DE TRANSITION
+ */
 function processDart(points) {
     scoresThisRound[dartsThrownThisRound] = points;
     UI.updateDartInputs(dartsThrownThisRound, points);
     dartsThrownThisRound++;
-    // Mise à jour des stats globales de fléchettes lancées
+    
+    // Stats : on compte chaque fléchette lancée
     getActivePlayer().stats.totalDarts++;
 }
 
 function completeTurn() {
     const player = getActivePlayer();
     
-    // On enregistre l'historique
+    // Historique
     UI.addHistoryRow(state.roundNumber, player.name, scoresThisRound);
     
-    // Reset tour local
-    dartsThrownThisRound = 0;
-    scoresThisRound = [0, 0, 0];
-    UI.clearDartInputs();
-    
+    resetRoundState();
     nextTurn();
     refreshView();
 }
 
+/**
+ * Nettoie les variables du tour en cours
+ */
+function resetRoundState() {
+    dartsThrownThisRound = 0;
+    scoresThisRound = [0, 0, 0];
+    UI.clearDartInputs();
+}
+
+/**
+ * Écran final
+ */
 function handleMatchWin(winner) {
+    state.isMatchOver = true;
     const overlay = document.getElementById('stats-summary-overlay');
     document.getElementById('final-winner-name').textContent = winner.name;
     
-    // Calcul de la moyenne (Points / (Darts/3))
-    const avg = (winner.stats.pointsScored / (winner.stats.totalDarts / 3 || 1)).toFixed(2);
+    // Moyenne : (Total Points / Total Fléchettes) * 3
+    const avg = (winner.stats.pointsScored / (winner.stats.totalDarts || 1) * 3).toFixed(2);
     document.getElementById('stat-avg').textContent = avg;
 
     overlay.style.display = 'flex';
