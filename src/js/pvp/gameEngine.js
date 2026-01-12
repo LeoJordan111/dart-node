@@ -11,23 +11,32 @@ let currentMultiplier = 1;
  */
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
-    
+    const mode = params.get('mode') || 'pvp'; // 'solo' ou 'pvp'
+    const startScore = parseInt(params.get('startScore')) || 501;
+
+    // On envoie TOUT au setupMatch
     GameState.setupMatch(
         localStorage.getItem('player1_name') || "Joueur 1",
         localStorage.getItem('player2_name') || "Joueur 2",
         parseInt(params.get('sets')) || 1,
-        parseInt(params.get('legs')) || 1
+        parseInt(params.get('legs')) || 1,
+        mode,
+        startScore
     );
 
+    UI.initLayout(mode);
     updateStarterUI(); 
     refreshView();
     bindEvents();
 });
 
 /**
- * MET À JOUR L'AFFICHAGE DU STARTER (🎯)
+ * MET À JOUR L'AFFICHAGE DU STARTER
  */
 function updateStarterUI() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'solo') return;
+
     const starterIndex = GameState.state.startingPlayerIndex; 
     const p1Info = document.getElementById('p1-info');
     const p2Info = document.getElementById('p2-info');
@@ -46,7 +55,6 @@ function refreshView() {
  * GESTION DES CLICS
  */
 function bindEvents() {
-    // 1. Chiffres 0-25
     document.querySelectorAll('.container-num .num').forEach(btn => {
         btn.addEventListener('click', () => {
             if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
@@ -55,15 +63,12 @@ function bindEvents() {
             const points = val * currentMultiplier;
             const player = GameState.getActivePlayer();
 
-            // Logique de "Bust" (Dépassement)
             if (player.score - points < 0 || player.score - points === 1) {
-                // On remplit le reste des fléchettes avec 0
                 while(dartsThrownThisRound < 3) {
                     processDart(0);
                 }
-                // On enregistre et on finit le tour immédiatement
                 completeTurn(); 
-                return; // On arrête là pour ce tour
+                return;
             } else {
                 GameState.updatePlayerScore(points);
                 processDart(points);
@@ -75,15 +80,13 @@ function bindEvents() {
             
             refreshView();
 
-            // Si le joueur a gagné sur ce jet
             if (player.score === 0) {
-                saveRoundToTable(); // On enregistre la ligne finale
+                saveRoundToTable();
                 setTimeout(() => UI.openModal(true), 300);
             }
         });
     });
 
-    // 2. Multiplicateurs
     document.getElementById('double').addEventListener('click', (e) => {
         if (GameState.state.isMatchOver) return;
         currentMultiplier = 2;
@@ -98,31 +101,29 @@ function bindEvents() {
         document.getElementById('double').classList.remove('active');
     });
 
-    // 3. Bouton Valider
     document.getElementById('validate-button').addEventListener('click', () => {
         if (GameState.state.isMatchOver || dartsThrownThisRound === 0) return;
 
         const player = GameState.getActivePlayer();
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         
-        // Si zone de checkout (on a déjà géré le score 0 dans le clic du chiffre)
         if ((player.score + totalRound) <= 170 && player.score !== 0) {
             saveRoundToTable(); 
             UI.openModal(false);
         } else if (player.score === 0) {
-            // Déjà enregistré via le clic chiffre, on ouvre juste la modale si pas déjà fait
             UI.openModal(true);
         } else {
             completeTurn(); 
         }
     });
 
-    // 4. Formulaire de la Modale
     document.getElementById('dartsForm').addEventListener('submit', (e) => {
         e.preventDefault();
         UI.closeModal();
         
         const player = GameState.getActivePlayer();
+        const params = new URLSearchParams(window.location.search);
+        const isSolo = params.get('mode') === 'solo';
         
         if (player.score === 0) {
             const result = GameState.winLeg(player);
@@ -130,21 +131,20 @@ function bindEvents() {
             if (result === "MATCH_OVER") {
                 handleMatchWin(player);
             } else {
-                const params = new URLSearchParams(window.location.search);
                 const startScore = parseInt(params.get('startScore')) || 501;
-                
-                // On vide le tableau pour la nouvelle manche
-                //document.getElementById('history-body').innerHTML = '';
-                
+                // document.getElementById('history-body').innerHTML = '';
                 GameState.resetScoresForNewLeg(startScore);
                 updateStarterUI();
                 resetRoundState();
                 refreshView();
             }
         } else {
-            // Tour fini après passage par modale (double raté)
             resetRoundState();
-            GameState.nextTurn();
+            if (isSolo) {
+                GameState.state.roundNumber++;
+            } else {
+                GameState.nextTurn();
+            }
             refreshView();
         }
     });
@@ -156,10 +156,8 @@ function bindEvents() {
             if (dartsThrownThisRound > 0 && index === dartsThrownThisRound - 1) {
                 const pointsToUndo = scoresThisRound[index];
                 GameState.undoLastDartScore(pointsToUndo);
-                
                 scoresThisRound[index] = 0;
                 dartsThrownThisRound--;
-                
                 UI.updateDartInputs(index, "-");
                 refreshView();
             }
@@ -196,7 +194,9 @@ function saveRoundToTable() {
 function completeTurn() {
     saveRoundToTable();
     resetRoundState();
-    GameState.nextTurn();
+
+    GameState.nextTurn(); 
+
     refreshView();
 }
 

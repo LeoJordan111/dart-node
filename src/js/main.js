@@ -15,13 +15,11 @@ async function startGame() {
     const setsToWin = document.getElementById('sets-to-win').value;
     const legsPerSet = document.getElementById('legs-per-set').value;
     
-    // Récupérer les IDs des joueurs cochés
     const selectedPlayers = Array.from(document.querySelectorAll('input[name="players"]:checked'))
-                                 .map(cb => parseInt(cb.value));
+        .map(cb => parseInt(cb.value));
 
     if (selectedPlayers.length < 2) return alert("Sélectionnez au moins 2 joueurs !");
 
-    // Créer la partie dans le Back-end
     const response = await fetch('/api/games/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,14 +35,11 @@ async function startGame() {
         const gameData = await response.json();
         console.log("Partie créée avec succès :", gameData);
         
-        // Basculer l'affichage du menu vers le jeu
         document.getElementById('setup-container').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         
-        // Initialiser ton moteur de 501 avec gameData
         initGameEngine(gameData);
     }
 }
 
-// Charger les joueurs au lancement
 loadPlayersForSetup();

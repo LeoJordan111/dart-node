@@ -21,7 +21,7 @@ const createPlayer = (id, nickname) => ({
 export let state = {
     players: [],
     currentPlayerIndex: 0,
-    startingPlayerIndex: 0, // C'est l'index du joueur qui a le starter (🎯)
+    startingPlayerIndex: 0,
     roundNumber: 1,
     isMatchOver: false,
     config: {
@@ -34,46 +34,56 @@ export let state = {
  * ACTIONS
  */
 
-export function setupMatch(p1Name, p2Name, sets, legs) {
-    const params = new URLSearchParams(window.location.search);
-    const startScore = parseInt(params.get('startScore')) || 501;
-
-    state.players = [
-        createPlayer(1, p1Name),
-        createPlayer(2, p2Name)
-    ];
+export function setupMatch(p1Name, p2Name, sets, legs, mode, startScore = 501) {
+    if (mode === 'solo') {
+        state.players = [createPlayer(1, p1Name)];
+    } else {
+        state.players = [
+            createPlayer(1, p1Name),
+            createPlayer(2, p2Name)
+        ];
+    }
 
     state.players.forEach(p => p.score = startScore);
-
+    
     state.config.setsToWin = sets;
     state.config.legsPerSet = legs;
     
-    // Au début du match, le Joueur 1 commence
     state.startingPlayerIndex = 0; 
     state.currentPlayerIndex = 0;
     state.roundNumber = 1;
     state.isMatchOver = false;
 }
-
 export function getActivePlayer() {
-    return state.players[state.currentPlayerIndex];
+    if (state.players.length === 1) return state.players[0];
+    return state.players[state.currentPlayerIndex] || state.players[0];
 }
 
-export function getWaitingPlayer() {
-    return state.players[state.currentPlayerIndex === 0 ? 1 : 0];
+function isSoloMode() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'solo';
 }
 
 export function nextTurn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'solo') {
+        state.currentPlayerIndex = 0;
+        state.roundNumber++;
+        return;
+    }
+
     if (state.currentPlayerIndex === 1) {
         state.roundNumber++;
     }
-    state.currentPlayerIndex = state.currentPlayerIndex === 0 ? 1 : 0;
+    state.currentPlayerIndex = (state.currentPlayerIndex === 0) ? 1 : 0;
 }
 
 export function updatePlayerScore(points) {
     const player = getActivePlayer();
-    player.score -= points;
-    player.stats.pointsScored += points;
+    if (player) {
+        player.score -= points;
+        player.stats.pointsScored += points;
+    }
 }
 
 /**
@@ -81,12 +91,6 @@ export function updatePlayerScore(points) {
  */
 export function winLeg(player) {
     player.legs++;
-
-    // Alternance du starter pour la manche suivante
-    state.startingPlayerIndex = (state.startingPlayerIndex === 0) ? 1 : 0;
-    
-    // Le joueur qui commence la nouvelle manche est le nouveau starter
-    state.currentPlayerIndex = state.startingPlayerIndex;
 
     if (player.legs >= state.config.legsPerSet) {
         player.sets++;
@@ -107,7 +111,12 @@ export function winLeg(player) {
 export function resetScoresForNewLeg(startScore = 501) {
     state.players.forEach(p => p.score = startScore);
     
-    // On s'assure que le tour revient bien au starter actuel
+    if (!isSoloMode() && state.players.length > 1) {
+        state.startingPlayerIndex = (state.startingPlayerIndex === 0) ? 1 : 0;
+    } else {
+        state.startingPlayerIndex = 0;
+    }
+
     state.currentPlayerIndex = state.startingPlayerIndex;
     state.roundNumber = 1;
     state.isMatchOver = false;
@@ -115,6 +124,8 @@ export function resetScoresForNewLeg(startScore = 501) {
 
 export function undoLastDartScore(points) {
     const player = getActivePlayer();
+    if (!player) return;
+    
     player.score += points;
     player.stats.pointsScored -= points;
     if (player.stats.totalDarts > 0) player.stats.totalDarts--;

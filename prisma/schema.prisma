@@ -15,7 +15,7 @@ model Player {
   nickname  String       @unique
   createdAt DateTime     @default(now())
   games     GamePlayer[]
-  turns     Turn[]       // Relation inverse ajoutée
+  turns     Turn[]       
 }
 
 model Game {

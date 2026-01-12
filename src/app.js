@@ -1,5 +1,5 @@
 const express = require('express');
-const path = require('path'); // Déclaré une seule fois ici
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -8,12 +8,11 @@ const PORT = process.env.PORT || 3000;
 // 1. MIDDLEWARES (Toujours en premier)
 app.use(express.json());
 
-// 2. CONFIGURATION DES DOSSIERS STATIQUES
-// On définit où sont les fichiers CSS, JS et les vues
+// 2. CONFIGURATION FICHIERs STATIQUES
 app.use('/css', express.static(path.join(__dirname, 'styles')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 
-// 3. ROUTES POUR LES PAGES HTML (Navigation)
+// 3. ROUTES PAGES NAV
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
@@ -24,6 +23,10 @@ app.get('/setup', (req, res) => {
 
 app.get('/game', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'game.html'));
+});
+
+app.get('/gameSolo', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'gameSolo.html'));
 });
 
 // 4. LES ROUTES API

@@ -2,7 +2,6 @@
 const params = new URLSearchParams(window.location.search);
 const mode = params.get('mode') || 'pvp';
 
-// Adaptation visuelle immédiate
 document.addEventListener('DOMContentLoaded', () => {
     if (mode === 'solo') {
         document.getElementById('setup-title').innerText = "Mode Solo";
@@ -32,7 +31,6 @@ async function loadPlayers() {
     }
 }
 
-// Limite le nombre de joueurs cochés selon le mode
 function checkSelectionLimit(event) {
     const checked = document.querySelectorAll('input[name="players"]:checked');
     const limit = (mode === 'solo') ? 1 : 2;
@@ -43,27 +41,22 @@ function checkSelectionLimit(event) {
     }
 }
 
-// Envoi au serveur pour créer la partie
 async function validateAndStart() {
     const checkedInputs = Array.from(document.querySelectorAll('input[name="players"]:checked'));
     const limit = (mode === 'solo') ? 1 : 2;
 
-    // 1. On vérifie d'abord si le nombre de joueurs est correct
     if (checkedInputs.length !== limit) {
         return alert(`Veuillez sélectionner exactement ${limit} joueur(s).`);
     }
 
-    // 2. Maintenant qu'on est sûr qu'ils existent, on stocke les noms
     if (mode === 'solo') {
         const name1 = checkedInputs[0].getAttribute('data-nickname');
         localStorage.setItem('player1_name', name1);
-        localStorage.setItem('currentPlayerNickname', name1); // Pour ton ancien code solo
     } else {
         localStorage.setItem('player1_name', checkedInputs[0].getAttribute('data-nickname'));
         localStorage.setItem('player2_name', checkedInputs[1].getAttribute('data-nickname'));
     }
 
-    // 3. Préparation des données pour le serveur
     const payload = {
         type: document.getElementById('game-type').value,
         setsToWin: parseInt(document.getElementById('sets-to-win').value),
@@ -72,7 +65,6 @@ async function validateAndStart() {
         mode: mode
     };
 
-    // 4. Envoi au serveur
     try {
         const res = await fetch('/api/games/create', {
             method: 'POST',
@@ -82,15 +74,16 @@ async function validateAndStart() {
 
         if (res.ok) {
             const game = await res.json();
-            // On ajoute le "type" (301, 501...) dans l'URL pour gameEngine.js
-            window.location.href = `/game?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}`;
+            
+            const route = (mode === 'solo') ? '/gameSolo' : '/game';
+            
+            window.location.href = `${route}?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}&mode=${mode}`;
         }
     } catch (err) {
         console.error("Erreur lors de la création de la partie:", err);
     }
 }
 
-// Gestion de l'ajout rapide (inchangée mais propre)
 function toggleQuickAdd() {
     const form = document.getElementById('quick-add-player');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -103,17 +96,16 @@ async function addPlayerQuick() {
     if (!nickname) return alert("Veuillez entrer un pseudo");
 
     try {
-        // AJOUT DE /register ICI
         const response = await fetch('/api/players/register', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nickname }) // On envoie juste le pseudo
+            body: JSON.stringify({ nickname })
         });
 
         if (response.ok) {
             nicknameInput.value = '';
             toggleQuickAdd(); 
-            await loadPlayers(); // Recharge la liste pour voir le nouveau joueur
+            await loadPlayers(); 
         } else {
             alert("Erreur lors de la création du joueur");
         }

@@ -2,9 +2,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALISATION DES PARAMÈTRES URL ---
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('id');
+    const startScoreArg = parseInt(params.get('startScore')) || 501;
 
-    // --- SÉLECTEURS ---
-    const playerNameElement = document.getElementById('current-player-name');
+    // --- SÉLECTEURS (Vérifiés avec ton HTML) ---
+    const playerNameElement = document.getElementById('current-player-name-solo');
     const mainScoreElement = document.getElementById('main-score');
     const scoreInputs = document.querySelectorAll('.score-input');
     const retourButtons = document.querySelectorAll('.score-comeback');
@@ -16,27 +17,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyBody = document.getElementById('history-body');
     const dartsForm = document.getElementById('dartsForm');
     const modal = document.getElementById('dartsModal');
-    const setDisplay = document.getElementById('set-count');
-    const legDisplay = document.getElementById('leg-count');
+    const setDisplay = document.getElementById('set-count-solo');
+    const legDisplay = document.getElementById('leg-count-solo');
 
     // --- VARIABLES D'ÉTAT ---
-    const savedNickname = localStorage.getItem('currentPlayerNickname') || "Joueur 1";
-    playerNameElement.textContent = savedNickname;
+    const savedNickname = localStorage.getItem('player1_name') || "Joueur Solo";
+    if (playerNameElement) playerNameElement.textContent = savedNickname;
 
     let currentMultiplier = 1;
     let dartsThrownThisRound = 0;
     let scoresThisRound = [0, 0, 0];
-    let totalLegScore = 501; 
+    let totalLegScore = startScoreArg; 
     let roundNumber = 1;
     
     let setsWon = 0;
     let legsWon = 0;
     const SETS_TO_WIN_MATCH = parseInt(params.get('sets')) || 1; 
-    const LEGS_TO_WIN_SET = parseInt(params.get('legs')) || 1;
+    const LEGS_TO_WIN_SET = parseInt(params.get('legs')) || 3;
 
     let totalDartsCount = 0;      
     let totalDoubleAttempts = 0;  
     let totalPointsScored = 0; 
+
+    // Initialisation affichage score
+    mainScoreElement.textContent = totalLegScore;
 
     // --- FONCTIONS DE MATCH ---
 
@@ -46,8 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startNewLeg() {
-        totalLegScore = 501;
-        mainScoreElement.textContent = "501";
+        totalLegScore = startScoreArg;
+        mainScoreElement.textContent = totalLegScore;
         roundNumber = 1;
         dartsThrownThisRound = 0;
         scoresThisRound = [0, 0, 0];
@@ -58,8 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function saveGameStats() {
         const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
+        const totalLegsCompleted = (setsWon * LEGS_TO_WIN_SET) + legsWon;
         const checkoutRate = totalDoubleAttempts > 0 
-            ? (((setsWon * LEGS_TO_WIN_SET) + legsWon) / totalDoubleAttempts * 100).toFixed(2) 
+            ? ((totalLegsCompleted / totalDoubleAttempts) * 100).toFixed(2) 
             : 0;
 
         const statsPayload = {
@@ -72,12 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch(`/api/games/${gameId}/finish`, {
+            await fetch(`/api/games/${gameId}/finish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(statsPayload)
             });
-            if (response.ok) console.log("Stats enregistrées !");
         } catch (err) {
             console.error("Erreur stats:", err);
         }
@@ -85,8 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showFinalStats() {
         const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
+        const totalLegsCompleted = (setsWon * LEGS_TO_WIN_SET) + legsWon;
         const checkoutRate = totalDoubleAttempts > 0 
-            ? Math.round(((setsWon * LEGS_TO_WIN_SET) / totalDoubleAttempts) * 100) 
+            ? Math.round((totalLegsCompleted / totalDoubleAttempts) * 100) 
             : 0;
 
         document.getElementById('final-winner-name').innerText = savedNickname;
@@ -98,21 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stats-summary-overlay').style.display = 'flex';
     }
 
-    // CORRECTION : Cette logique doit être DANS une fonction
     function handleLegWin() {
         legsWon++;
-        
-        if (legsWon === LEGS_TO_WIN_SET) {
+        if (legsWon >= LEGS_TO_WIN_SET) {
             setsWon++;
             legsWon = 0;
-            if (setsWon < SETS_TO_WIN_MATCH) alert(`🏆 SET REMPORTÉ ! (${setsWon}/${SETS_TO_WIN_MATCH})`);
-        } else {
-            alert(`🎯 LEG REMPORTÉ ! (${legsWon}/${LEGS_TO_WIN_SET})`);
         }
 
         updateMatchDisplay();
         
-        if (setsWon === SETS_TO_WIN_MATCH) {
+        if (setsWon >= SETS_TO_WIN_MATCH) {
             saveGameStats(); 
             showFinalStats(); 
         } else {
@@ -138,11 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function completeRound() {
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         const row = `<tr>
-            <td>${roundNumber}</td>
+            <td>T${roundNumber}</td>
             <td>${scoresThisRound[0]}</td>
             <td>${scoresThisRound[1]}</td>
             <td>${scoresThisRound[2]}</td>
             <td><strong>${totalRound}</strong></td>
+            <td>${totalLegScore}</td>
         </tr>`;
         historyBody.insertAdjacentHTML('afterbegin', row);
 
@@ -151,12 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scoresThisRound = [0, 0, 0];
         scoreInputs.forEach(input => input.textContent = '-');
         resetMultipliers();
-    }
-
-    function openModal() {
-        modal.style.display = 'block';
-        const modalTitle = document.getElementById('modal-title');
-        modalTitle.innerText = (totalLegScore === 0) ? "🎯 Leg Terminé !" : "Statistiques de Checkout";
     }
 
     // --- ÉCOUTEURS ---
@@ -178,28 +173,39 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             if (dartsThrownThisRound >= 3) return;
             const val = parseInt(btn.textContent);
-            if (!isNaN(val)) {
-                const points = val * currentMultiplier;
-                const potential = totalLegScore - points;
+            
+            const points = val * currentMultiplier;
+            const potential = totalLegScore - points;
 
-                if (potential < 0 || potential === 1) {
-                    recordDart(0); // BUST
-                } else {
-                    totalLegScore = potential;
-                    mainScoreElement.textContent = totalLegScore;
-                    recordDart(points);
+            if (potential < 0 || potential === 1) {
+
+                while(dartsThrownThisRound < 3) {
+                    recordDart(0);
                 }
-                resetMultipliers();
+                setTimeout(() => completeRound(), 500);
+            } else {
+                totalLegScore = potential;
+                mainScoreElement.textContent = totalLegScore;
+                recordDart(points);
+                
+                if (totalLegScore === 0) {
+                    setTimeout(() => modal.style.display = 'block', 300);
+                }
             }
+            resetMultipliers();
         });
     });
 
     noScoreBtn.addEventListener('click', () => {
-        if (dartsThrownThisRound < 3) recordDart(0);
+        while(dartsThrownThisRound < 3) {
+            recordDart(0);
+        }
+        completeRound();
     });
 
     retourButtons.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (dartsThrownThisRound > 0 && index === dartsThrownThisRound - 1) {
                 const pointsRemoved = scoresThisRound[index];
                 totalLegScore += pointsRemoved;
@@ -214,11 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     validateBtn.addEventListener('click', () => {
         if (dartsThrownThisRound === 0) return;
-        const scoreTotalTour = scoresThisRound.reduce((a, b) => a + b, 0);
-        const scoreAuDebutDuTour = totalLegScore + scoreTotalTour;
-
-        if (scoreAuDebutDuTour <= 170 || totalLegScore === 0) {
-            openModal();
+        
+        if (totalLegScore <= 170) {
+            modal.style.display = 'block';
         } else {
             totalDartsCount += dartsThrownThisRound; 
             completeRound();
@@ -227,18 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dartsForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const doublesAttempted = parseInt(document.querySelector('input[name="checkoutDouble"]:checked').value);
-        const dartsInThisRound = parseInt(document.querySelector('input[name="dartsCount"]:checked').value);
+        const fd = new FormData(dartsForm);
+        const doublesAttempted = parseInt(fd.get('checkoutDouble'));
+        const dartsInThisRound = parseInt(fd.get('dartsCount'));
 
-        totalDartsCount += dartsInThisRound;
+        totalDartsCount += (dartsInThisRound - (dartsThrownThisRound - dartsInThisRound)); 
         totalDoubleAttempts += doublesAttempted;
 
         modal.style.display = 'none';
         const isLegOver = (totalLegScore === 0);
+        
         completeRound();
 
-        if (isLegOver) handleLegWin();
-        e.target.reset();
+        if (isLegOver) {
+            handleLegWin();
+        }
+        dartsForm.reset();
     });
     
     updateMatchDisplay();
