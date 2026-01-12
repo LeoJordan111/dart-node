@@ -103,20 +103,31 @@ export const UI = {
     /**
      * Ajoute une ligne dans le tableau historique
      */
-    addHistoryRow: (roundNumber, playerNickname, scores) => {
+    addHistoryRow: (tourLabel, playerName, scores, remainingScore) => {
+        const historyBody = document.getElementById('history-body');
+        if (!historyBody) return;
+
         const total = scores.reduce((a, b) => a + b, 0);
-        const html = `
-            <tr>
-                <td>${roundNumber} (${playerNickname})</td>
-                <td>${scores[0]}</td>
-                <td>${scores[1]}</td>
-                <td>${scores[2]}</td>
-                <td><strong>${total}</strong></td>
-            </tr>
+        const tr = document.createElement('tr');
+        
+        // Couleur de fond légère pour différencier les joueurs
+        tr.style.backgroundColor = playerName === GameState.state.players[1].name ? "#f2f2f2" : "#ffffff";
+        
+        // On remplit le contenu du TR (sans réécrire <tr> dedans)
+        tr.innerHTML = `
+            <td>
+                <div>${playerName}</div>
+                <div>${tourLabel}</div>
+            </td>
+            <td>${scores[0]}</td>
+            <td>${scores[1]}</td>
+            <td>${scores[2]}</td>
+            <td><strong>${total}</strong></td>
+            <td>${remainingScore}</td>
         `;
-        if (UI.elements.historyBody) {
-            UI.elements.historyBody.insertAdjacentHTML('afterbegin', html);
-        }
+
+        // On insère en haut du tableau
+        historyBody.prepend(tr);
     },
 
     /**

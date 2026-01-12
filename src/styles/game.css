@@ -58,8 +58,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
+    width: 98%;
     padding: 10px;
+    margin-left: 5px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     overflow: visible;
@@ -74,7 +75,7 @@ body {
 /* Alignements spécifiques par joueur */
 #p1-info { 
     align-items: flex-start;
-     text-align: left; 
+    text-align: left; 
 }
 #p2-info { 
     align-items: flex-end; 
@@ -106,12 +107,12 @@ body {
 }
 
 #p1-info.is-starter .p-name::after {
-    right: 100%;
+    right: 104%;
     margin-right: 8px;
 }
 
 #p2-info.is-starter .p-name::after {
-    left: 100%;
+    left: 115%;
     margin-left: 8px;
 }
 
@@ -145,7 +146,7 @@ body {
 }
 
 #p1-info .p-current-score {
-    padding-left: 0;
+    padding-left: 8px;
 }
 
 .vs-divider {

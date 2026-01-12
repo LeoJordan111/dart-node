@@ -28,9 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * MET À JOUR L'AFFICHAGE DU STARTER (🎯)
  */
 function updateStarterUI() {
-    // Utilise bien startingPlayerIndex qui est maintenant synchronisé
     const starterIndex = GameState.state.startingPlayerIndex; 
-    
     const p1Info = document.getElementById('p1-info');
     const p2Info = document.getElementById('p2-info');
 
@@ -59,38 +57,44 @@ function bindEvents() {
 
             // Logique de "Bust" (Dépassement)
             if (player.score - points < 0 || player.score - points === 1) {
-                processDart(0);
-                dartsThrownThisRound = 3; 
+                // On remplit le reste des fléchettes avec 0
+                while(dartsThrownThisRound < 3) {
+                    processDart(0);
+                }
+                // On enregistre et on finit le tour immédiatement
+                completeTurn(); 
+                return; // On arrête là pour ce tour
             } else {
                 GameState.updatePlayerScore(points);
                 processDart(points);
             }
             
             currentMultiplier = 1; 
-            // On enlève visuellement l'état actif des boutons double/triple
             document.getElementById('double').classList.remove('active');
             document.getElementById('triple').classList.remove('active');
             
             refreshView();
 
+            // Si le joueur a gagné sur ce jet
             if (player.score === 0) {
+                saveRoundToTable(); // On enregistre la ligne finale
                 setTimeout(() => UI.openModal(true), 300);
             }
         });
     });
 
-    // 2. Multiplicateurs (avec retour visuel)
+    // 2. Multiplicateurs
     document.getElementById('double').addEventListener('click', (e) => {
         if (GameState.state.isMatchOver) return;
         currentMultiplier = 2;
-        e.target.classList.add('active');
+        e.currentTarget.classList.add('active');
         document.getElementById('triple').classList.remove('active');
     });
 
     document.getElementById('triple').addEventListener('click', (e) => {
         if (GameState.state.isMatchOver) return;
         currentMultiplier = 3;
-        e.target.classList.add('active');
+        e.currentTarget.classList.add('active');
         document.getElementById('double').classList.remove('active');
     });
 
@@ -101,15 +105,19 @@ function bindEvents() {
         const player = GameState.getActivePlayer();
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         
-        // Si le joueur a fini ou est en zone de checkout (<= 170)
-        if (player.score === 0 || (player.score + totalRound) <= 170) {
-            UI.openModal(player.score === 0);
+        // Si zone de checkout (on a déjà géré le score 0 dans le clic du chiffre)
+        if ((player.score + totalRound) <= 170 && player.score !== 0) {
+            saveRoundToTable(); 
+            UI.openModal(false);
+        } else if (player.score === 0) {
+            // Déjà enregistré via le clic chiffre, on ouvre juste la modale si pas déjà fait
+            UI.openModal(true);
         } else {
-            completeTurn();
+            completeTurn(); 
         }
     });
 
-    // 4. Formulaire de la Modale (Stats de fin de tour/leg)
+    // 4. Formulaire de la Modale
     document.getElementById('dartsForm').addEventListener('submit', (e) => {
         e.preventDefault();
         UI.closeModal();
@@ -125,20 +133,23 @@ function bindEvents() {
                 const params = new URLSearchParams(window.location.search);
                 const startScore = parseInt(params.get('startScore')) || 501;
                 
-                alert(`${player.name} gagne la manche !`);
+                // On vide le tableau pour la nouvelle manche
+                //document.getElementById('history-body').innerHTML = '';
                 
-                // Reset pour la nouvelle manche
                 GameState.resetScoresForNewLeg(startScore);
                 updateStarterUI();
                 resetRoundState();
                 refreshView();
             }
         } else {
-            completeTurn();
+            // Tour fini après passage par modale (double raté)
+            resetRoundState();
+            GameState.nextTurn();
+            refreshView();
         }
     });
 
-    // 5. Boutons Undo (Retour arrière)
+    // 5. Boutons Undo
     document.querySelectorAll('.score-comeback').forEach((btn, index) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -150,19 +161,18 @@ function bindEvents() {
                 dartsThrownThisRound--;
                 
                 UI.updateDartInputs(index, "-");
-                UI.elements.scoreInputs[index].classList.remove('filled');
                 refreshView();
             }
         });
     });
 
-    // 6. Bouton No Score (0 points direct)
+    // 6. Bouton No Score
     document.getElementById('btn-no-score').addEventListener('click', () => {
         if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
         while(dartsThrownThisRound < 3) {
             processDart(0);
         }
-        refreshView();
+        completeTurn();
     });
 }
 
@@ -176,9 +186,15 @@ function processDart(points) {
     GameState.getActivePlayer().stats.totalDarts++;
 }
 
-function completeTurn() {
+function saveRoundToTable() {
     const player = GameState.getActivePlayer();
-    UI.addHistoryRow(GameState.state.roundNumber, player.name, scoresThisRound);
+    const currentLegNum = (GameState.state.players[0].legs + GameState.state.players[1].legs) + 1;
+    const tourLabel = `L${currentLegNum} - T${GameState.state.roundNumber}`;
+    UI.addHistoryRow(tourLabel, player.name, scoresThisRound, player.score);
+}
+
+function completeTurn() {
+    saveRoundToTable();
     resetRoundState();
     GameState.nextTurn();
     refreshView();
@@ -189,20 +205,15 @@ function resetRoundState() {
     scoresThisRound = [0, 0, 0];
     UI.clearDartInputs();
     currentMultiplier = 1;
-    document.getElementById('double').classList.remove('active');
-    document.getElementById('triple').classList.remove('active');
+    document.querySelectorAll('.container-multi .num').forEach(b => b.classList.remove('active'));
 }
 
 function handleMatchWin(winner) {
     GameState.state.isMatchOver = true;
     const overlay = document.getElementById('stats-summary-overlay');
     document.getElementById('final-winner-name').textContent = winner.name;
-    
     const avg = (winner.stats.pointsScored / (winner.stats.totalDarts || 1) * 3).toFixed(2);
     document.getElementById('stat-avg').textContent = avg;
-    
-    // Affichage score final Sets - Legs
     document.getElementById('stat-score').textContent = `${winner.sets} - ${winner.legs}`;
-
     overlay.style.display = 'flex';
 }
