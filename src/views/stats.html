@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/stats.css"> 
+    <title>Darts Stats - Tableau de bord</title>
+</head>
+<body>
+
+    <div id="stats-page-root">
+        
+        <header class="stats-header">
+            <a href="/" class="btn-back">
+                <span>←</span> Menu
+            </a>
+            <h1 id="stats-title">Chargement...</h1>
+            <div class="header-spacer"></div>
+        </header>
+
+        <div class="stats-summary-grid">
+            <div class="stat-card gold">
+                <div class="card-icon">🎯</div>
+                <span class="label">Moyenne Globale</span>
+                <span class="value" id="global-avg">0.00</span>
+                <span class="sub">Points par volée</span>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-icon">🏹</div>
+                <span class="label">Taux de Double</span>
+                <span class="value" id="global-checkout">0%</span>
+                <span class="sub">Précision de fermeture</span>
+            </div>
+
+            <div class="stat-card">
+                <div class="card-icon">📊</div>
+                <span class="label">Total Fléchettes</span>
+                <span class="value" id="total-darts">0</span>
+                <span class="sub">Lancées au total</span>
+            </div>
+        </div>
+
+        <section class="history-section">
+            <h2>Derniers Matchs</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Mode</th>
+                            <th>Vainqueur</th>
+                            <th>Moyenne</th>
+                            <th>Checkout</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-history-body">
+                        <tr>
+                            <td colspan="5" class="loading-cell">
+                                Récupération des données...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="/js/stats.js"></script>
+</body>
+</html>

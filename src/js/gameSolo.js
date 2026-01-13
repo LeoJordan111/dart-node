@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INITIALISATION DES PARAMÈTRES URL ---
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('id');
+    const playerId = params.get('playerId');
     const startScoreArg = parseInt(params.get('startScore')) || 501;
 
-    // --- SÉLECTEURS (Vérifiés avec ton HTML) ---
+    // --- SÉLECTEURS ---
     const playerNameElement = document.getElementById('current-player-name-solo');
     const mainScoreElement = document.getElementById('main-score');
     const scoreInputs = document.querySelectorAll('.score-input');
-    const retourButtons = document.querySelectorAll('.score-comeback');
     const numButtons = document.querySelectorAll('.container-num .num');
     const doubleBtn = document.getElementById('double');
     const tripleBtn = document.getElementById('triple');
@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalDoubleAttempts = 0;  
     let totalPointsScored = 0; 
 
-    // Initialisation affichage score
     mainScoreElement.textContent = totalLegScore;
 
     // --- FONCTIONS DE MATCH ---
@@ -60,20 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
         resetMultipliers();
     }
 
-    async function saveGameStats() {
+    async function saveGameStats(isFinished = false) {
         const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
+        
         const totalLegsCompleted = (setsWon * LEGS_TO_WIN_SET) + legsWon;
         const checkoutRate = totalDoubleAttempts > 0 
             ? ((totalLegsCompleted / totalDoubleAttempts) * 100).toFixed(2) 
             : 0;
 
         const statsPayload = {
-            gameId: gameId,
-            winner: savedNickname,
+            status: isFinished ? "FINISHED" : "IN_PROGRESS",
+            winner: isFinished ? savedNickname : null,
             totalDarts: totalDartsCount,
             totalAttempts: totalDoubleAttempts,
             checkoutRate: checkoutRate,
-            average: avg
+            average: parseFloat(avg)
         };
 
         try {
@@ -87,24 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showFinalStats() {
-        const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : 0;
-        const totalLegsCompleted = (setsWon * LEGS_TO_WIN_SET) + legsWon;
-        const checkoutRate = totalDoubleAttempts > 0 
-            ? Math.round((totalLegsCompleted / totalDoubleAttempts) * 100) 
-            : 0;
-
-        document.getElementById('final-winner-name').innerText = savedNickname;
-        document.getElementById('stat-avg').innerText = avg;
-        document.getElementById('stat-checkout').innerText = checkoutRate + "%";
-        document.getElementById('stat-darts').innerText = totalDartsCount;
-        document.getElementById('stat-score').innerText = `${setsWon} Sets - ${legsWon} Legs`;
-
-        document.getElementById('stats-summary-overlay').style.display = 'flex';
-    }
-
     function handleLegWin() {
         legsWon++;
+
         if (legsWon >= LEGS_TO_WIN_SET) {
             setsWon++;
             legsWon = 0;
@@ -113,14 +98,75 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMatchDisplay();
         
         if (setsWon >= SETS_TO_WIN_MATCH) {
-            saveGameStats(); 
-            showFinalStats(); 
+       
+            saveGameStats(true); 
+        
+            setTimeout(() => {
+                showFinalStats();
+            }, 500);
+
         } else {
-            startNewLeg();
+            console.log("Leg terminé. Préparation du suivant...");
+            
+            saveGameStats(false); 
+            
+            setTimeout(() => {
+                alert("Leg terminé ! Préparez-vous pour le suivant.");
+                startNewLeg();
+            }, 1000);
         }
     }
 
-    // --- FONCTIONS TECHNIQUES ---
+    async function completeRound(exactCount = 3) {
+        const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
+        
+
+        const turnData = {
+            gameId: parseInt(gameId),
+            legId: 1, 
+            playerId: parseInt(playerId),
+            points: totalRound,
+            dartsThrown: exactCount,
+            remaining: totalLegScore,
+            isBust: (totalLegScore === (totalLegScore + totalRound)) && totalRound === 0 
+        };
+
+        try {
+            const response = await fetch('/api/games/turn', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(turnData)
+            });
+
+            if (!response.ok) {
+                console.error("Erreur lors de l'enregistrement en base de données");
+            }
+        } catch (err) {
+            console.error("Erreur réseau (Prisma non atteint):", err);
+        }
+
+        totalDartsCount += exactCount;
+
+        const row = `<tr>
+            <td>T${roundNumber}</td>
+            <td>${scoresThisRound[0]}</td>
+            <td>${scoresThisRound[1]}</td>
+            <td>${scoresThisRound[2]}</td>
+            <td><strong>${totalRound}</strong></td>
+            <td>${totalLegScore}</td>
+        </tr>`;
+        
+        if (historyBody) {
+            historyBody.insertAdjacentHTML('afterbegin', row);
+        }
+
+        roundNumber++;
+        dartsThrownThisRound = 0;
+        scoresThisRound = [0, 0, 0];
+        
+        scoreInputs.forEach(input => input.textContent = '-');
+        resetMultipliers();
+    }
 
     function resetMultipliers() {
         currentMultiplier = 1;
@@ -135,38 +181,57 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPointsScored += points; 
     }
 
-    function completeRound() {
-        const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
-        const row = `<tr>
-            <td>T${roundNumber}</td>
-            <td>${scoresThisRound[0]}</td>
-            <td>${scoresThisRound[1]}</td>
-            <td>${scoresThisRound[2]}</td>
-            <td><strong>${totalRound}</strong></td>
-            <td>${totalLegScore}</td>
-        </tr>`;
-        historyBody.insertAdjacentHTML('afterbegin', row);
+    function showFinalStats() {
+        const avg = totalDartsCount > 0 ? ((totalPointsScored / totalDartsCount) * 3).toFixed(2) : "0.00";
+        
+        const totalLegsCompleted = (setsWon * LEGS_TO_WIN_SET) + legsWon;
+        const checkoutRate = totalDoubleAttempts > 0 
+            ? ((totalLegsCompleted / totalDoubleAttempts) * 100).toFixed(2) 
+            : "0.00";
 
-        roundNumber++;
-        dartsThrownThisRound = 0;
-        scoresThisRound = [0, 0, 0];
-        scoreInputs.forEach(input => input.textContent = '-');
-        resetMultipliers();
+        const winnerNameElement = document.getElementById('final-winner-name');
+        const statAvgElement = document.getElementById('stat-avg');
+        const statDartsElement = document.getElementById('stat-darts');
+        const statCheckoutElement = document.getElementById('stat-checkout');
+        const overlay = document.getElementById('stats-summary-overlay');
+
+        if (winnerNameElement) winnerNameElement.innerText = savedNickname;
+        if (statAvgElement) statAvgElement.innerText = avg;
+        if (statDartsElement) statDartsElement.innerText = totalDartsCount;
+        if (statCheckoutElement) statCheckoutElement.innerText = `${checkoutRate}%`;
+
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+
+        const homeBtn = document.getElementById('btn-back-home');
+        if (homeBtn) {
+            homeBtn.onclick = () => {
+                window.location.href = '/stats';
+            };
+        }
     }
 
     // --- ÉCOUTEURS ---
 
-    [doubleBtn, tripleBtn].forEach(btn => {
-        btn.addEventListener('click', () => {
-            const val = (btn.id === 'double') ? 2 : 3;
-            if (btn.classList.contains('active')) {
-                resetMultipliers();
-            } else {
-                resetMultipliers();
-                btn.classList.add('active');
-                currentMultiplier = val;
-            }
-        });
+    doubleBtn.addEventListener('click', () => {
+        if (currentMultiplier === 2) {
+            resetMultipliers();
+        } else {
+            resetMultipliers();
+            currentMultiplier = 2;
+            doubleBtn.classList.add('active');
+        }
+    });
+
+    tripleBtn.addEventListener('click', () => {
+        if (currentMultiplier === 3) {
+            resetMultipliers();
+        } else {
+            resetMultipliers();
+            currentMultiplier = 3;
+            tripleBtn.classList.add('active');
+        }
     });
 
     numButtons.forEach(btn => {
@@ -174,15 +239,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dartsThrownThisRound >= 3) return;
             const val = parseInt(btn.textContent);
             
+            if (val === 25 && currentMultiplier === 3) {
+                resetMultipliers();
+                return;
+            }
+
             const points = val * currentMultiplier;
             const potential = totalLegScore - points;
 
             if (potential < 0 || potential === 1) {
-
-                while(dartsThrownThisRound < 3) {
+                const remainingDarts = 3 - dartsThrownThisRound;
+                for(let i=0; i < remainingDarts; i++) {
                     recordDart(0);
                 }
-                setTimeout(() => completeRound(), 500);
+                completeRound(3);
             } else {
                 totalLegScore = potential;
                 mainScoreElement.textContent = totalLegScore;
@@ -196,58 +266,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    noScoreBtn.addEventListener('click', () => {
-        while(dartsThrownThisRound < 3) {
-            recordDart(0);
-        }
-        completeRound();
-    });
 
-    retourButtons.forEach((btn, index) => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (dartsThrownThisRound > 0 && index === dartsThrownThisRound - 1) {
-                const pointsRemoved = scoresThisRound[index];
-                totalLegScore += pointsRemoved;
-                totalPointsScored -= pointsRemoved;
-                mainScoreElement.textContent = totalLegScore;
-                scoreInputs[index].textContent = '-';
-                scoresThisRound[index] = 0;
-                dartsThrownThisRound--;
+    if (noScoreBtn) {
+        noScoreBtn.addEventListener('click', () => {
+            if (dartsThrownThisRound < 3) {
+                recordDart(0);
+                if (dartsThrownThisRound === 3) completeRound(3);
             }
+            resetMultipliers();
         });
-    });
+    }
 
     validateBtn.addEventListener('click', () => {
         if (dartsThrownThisRound === 0) return;
-        
-        if (totalLegScore <= 170) {
+
+        if (totalLegScore <= 170 && totalLegScore > 0) {
             modal.style.display = 'block';
-        } else {
-            totalDartsCount += dartsThrownThisRound; 
-            completeRound();
+        } else if (totalLegScore > 0) {
+            completeRound(dartsThrownThisRound);
         }
     });
+
 
     dartsForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const fd = new FormData(dartsForm);
-        const doublesAttempted = parseInt(fd.get('checkoutDouble'));
-        const dartsInThisRound = parseInt(fd.get('dartsCount'));
+        const doublesAttempted = parseInt(fd.get('checkoutDouble')) || 0;
+        const exactDarts = parseInt(fd.get('dartsCount')) || dartsThrownThisRound;
 
-        totalDartsCount += (dartsInThisRound - (dartsThrownThisRound - dartsInThisRound)); 
         totalDoubleAttempts += doublesAttempted;
-
         modal.style.display = 'none';
+        
         const isLegOver = (totalLegScore === 0);
         
-        completeRound();
+        completeRound(exactDarts); 
 
         if (isLegOver) {
             handleLegWin();
         }
         dartsForm.reset();
     });
-    
+
     updateMatchDisplay();
 });

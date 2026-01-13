@@ -1,3 +1,32 @@
+document.addEventListener('DOMContentLoaded', () => {
+    loadPlayersForStats();
+});
+
+async function loadPlayersForStats() {
+    const select = document.getElementById('player-stats-select');
+    if (!select) return;
+
+    try {
+        const response = await fetch('/api/players');
+        const players = await response.json();
+
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.nickname;
+            option.textContent = player.nickname;
+            select.appendChild(option);
+        });
+    } catch (err) {
+        console.error("Erreur lors du chargement des joueurs pour les stats:", err);
+    }
+}
+
+function goToStats(nickname) {
+    if (nickname) {
+        window.location.href = `/stats?nickname=${encodeURIComponent(nickname)}`;
+    }
+}
+
 async function loadPlayersForSetup() {
     const res = await fetch('/api/players');
     const players = await res.json();
@@ -39,6 +68,18 @@ async function startGame() {
         document.getElementById('game-container').style.display = 'block';
         
         initGameEngine(gameData);
+    }
+}
+
+async function selectPlayerForStats() {
+    const res = await fetch('/api/players');
+    const players = await res.json();
+    
+    const name = prompt("De quel joueur voulez-vous voir les stats ?\n" + 
+                        players.map(p => p.nickname).join(', '));
+    
+    if (name) {
+        window.location.href = `/stats?nickname=${encodeURIComponent(name)}`;
     }
 }
 

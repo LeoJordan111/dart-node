@@ -61,6 +61,8 @@ model Turn {
   points     Int      // Somme totale : (d1*m1) + (d2*m2) + (d3*m3)
   remaining  Int?     // Score restant après la volée
   isBust     Boolean  @default(false)
+
+  dartsThrown Int      @default(3)
   
   leg        Leg      @relation(fields: [legId], references: [id])
   player     Player   @relation(fields: [playerId], references: [id])

@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPlayers();
 });
 
-// Chargement des joueurs depuis l'API
 async function loadPlayers() {
     try {
         const response = await fetch('/api/players');
@@ -61,7 +60,7 @@ async function validateAndStart() {
         type: document.getElementById('game-type').value,
         setsToWin: parseInt(document.getElementById('sets-to-win').value),
         legsPerSet: parseInt(document.getElementById('legs-per-set').value),
-        playerIds: checkedInputs.map(input => input.value),
+        playerIds: checkedInputs.map(input => parseInt(input.value)),
         mode: mode
     };
 
@@ -74,10 +73,10 @@ async function validateAndStart() {
 
         if (res.ok) {
             const game = await res.json();
-            
             const route = (mode === 'solo') ? '/gameSolo' : '/game';
+            const playerId = payload.playerIds[0];
             
-            window.location.href = `${route}?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}&mode=${mode}`;
+            window.location.href = `${route}?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}&mode=${mode}&playerId=${playerId}`;
         }
     } catch (err) {
         console.error("Erreur lors de la création de la partie:", err);

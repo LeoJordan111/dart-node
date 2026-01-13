@@ -308,3 +308,26 @@ select:focus, input:focus {
     background: var(--primary);
     color: white;
 }
+
+.selector-wrapper {
+    margin-top: 15px;
+}
+
+#player-stats-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+#player-stats-select:focus {
+    border-color: #ffcc00;
+}
+
+.stats-selector-card {
+    cursor: default;
+}

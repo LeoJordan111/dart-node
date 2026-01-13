@@ -28,6 +28,20 @@
                 </div>
             </a>
 
+            <div class="menu-card stats-selector-card">
+                <div class="icon">📊</div>
+                <div class="info">
+                    <h3>Statistiques</h3>
+                    <p>Sélectionnez un profil.</p>
+                    
+                    <div class="selector-wrapper">
+                        <select id="player-stats-select" onchange="goToStats(this.value)">
+                            <option value="" disabled selected>Choisir un joueur...</option>
+                            </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="menu-card disabled">
                 <div class="icon">🤖</div>
                 <div class="info">

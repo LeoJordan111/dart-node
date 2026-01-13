@@ -29,6 +29,10 @@ app.get('/gameSolo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'gameSolo.html'));
 });
 
+app.get('/stats', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'stats.html'));
+});
+
 // 4. LES ROUTES API
 const playerRoutes = require('./routes/player.routes');
 app.use('/api/players', playerRoutes);
