@@ -147,7 +147,7 @@ body {
 
 .table-wrapper {
     background: var(--bg-card);
-    border-radius: 24px;
+    border-radius: 16px;
     border: 2px solid var(--border);
     box-shadow: var(--shadow-md);
     overflow: hidden; 
@@ -155,7 +155,8 @@ body {
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; 
+    table-layout: auto;
 }
 
 th {
@@ -179,6 +180,7 @@ td {
 
 tr:last-child td {
     border-bottom: none;
+    
 }
 
 tr:hover td {
@@ -192,7 +194,6 @@ tr:hover td {
     font-weight: 600;
 }
 
-/* Badges de mode (Harmonisé avec setup) */
 .mode-badge {
     padding: 6px 12px;
     border-radius: 10px;
@@ -206,6 +207,20 @@ tr:hover td {
 .avg-highlight {
     font-weight: 800;
     color: var(--primary);
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+}
+
+#player-stats-select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-weight: bold;
 }
 
 /* RESPONSIVE */

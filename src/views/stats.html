@@ -11,11 +11,14 @@
     <div id="stats-page-root">
         
         <header class="stats-header">
-            <a href="/" class="btn-back">
-                <span>←</span> Menu
-            </a>
-            <h1 id="stats-title">Chargement...</h1>
-            <div class="header-spacer"></div>
+            <a href="/" class="btn-back"><span>←</span> Menu</a>
+            
+            <h1 id="stats-title">Stats</h1>
+
+            <div class="selector-wrapper">
+                <select id="player-stats-select" onchange="changePlayer(this.value)">
+                    </select>
+            </div>
         </header>
 
         <div class="stats-summary-grid">
@@ -59,6 +62,73 @@
                             <td colspan="5" class="loading-cell">
                                 Récupération des données...
                             </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="stats-filters">
+            <div class="filter-group">
+                <label for="period-select">Période :</label>
+                <select id="period-select" onchange="updateStatsByPeriod()">
+                    <option value="day" selected>Jour</option>
+                    <option value="month">Mois</option>
+                    <option value="year">Année</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="performance-section">
+            <div class="table-wrapper">
+                <table id="performance-table">
+                    <thead>
+                        <tr id="perf-date-header">
+                            <th>Indicateurs</th>
+                            <th class="date-col">--/--</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perf-body">
+                        <tr class="theme-header">
+                            <td colspan="100%"><strong>Général</strong></td>
+                        </tr>
+                        <tr data-indicator="global-avg">
+                            <td>Moyenne Globale</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="checkout-avg">
+                            <td>Moyenne Double</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="checkout-rate">
+                            <td>Taux de Double (%)</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="total-darts">
+                            <td>Total Fléchettes</td>
+                            <td>-</td>
+                        </tr>
+
+                        <tr data-indicator="avg-9">
+                            <td>Moyenne sur 9 fléchettes</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="avg-12">
+                            <td>Moyenne sur 12 fléchettes</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="avg-15">
+                            <td>Moyenne sur 15 fléchettes</td>
+                            <td>-</td>
+                        </tr>
+
+                        <tr data-indicator="legs-won">
+                            <td>Legs Gagnés</td>
+                            <td>-</td>
+                        </tr>
+                        <tr data-indicator="darts-per-leg">
+                            <td>Darts / Leg</td>
+                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
