@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const SETS_TO_WIN_MATCH = parseInt(params.get('sets')) || 1; 
     const LEGS_TO_WIN_SET = parseInt(params.get('legs')) || 3;
 
+    // --- VARIABLES DE STATISTIQUES ---
+    let totalDartsCount = 0;      
+    let totalDoubleAttempts = 0;  
+    let totalPointsScored = 0;
+
     mainScoreElement.textContent = totalLegScore;
 
     // --- FONCTIONS DE MATCH ---
@@ -113,6 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Erreur API:", err);
         }
 
+        totalDartsCount += exactCount;
+        totalPointsScored += totalRound;
+
         renderHistoryRow(totalRound);
         roundNumber++;
         dartsThrownThisRound = 0;
@@ -179,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalLegScore = potential;
                 mainScoreElement.textContent = totalLegScore;
                 recordDart(points, val, currentMultiplier);
-                
                 if (totalLegScore === 0) {
                     setTimeout(() => modal.style.display = 'block', 300);
                 }
@@ -195,28 +202,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /**
-     * ACTION SUR LE BOUTON VALIDER
-     */
     validateBtn.addEventListener('click', async () => {
         if (dartsThrownThisRound === 0) return;
-
         const isBust = (scoresThisRound.every(s => s === 0) && totalLegScore > 0);
         
         if (totalLegScore <= 170 && !isBust && modal.style.display !== 'block') {
             modal.style.display = 'block';
             return;
         }
-
         await completeRound(dartsThrownThisRound, isBust);
     });
 
     dartsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(dartsForm);
-        const exactDarts = parseInt(fd.get('dartsCount')) || dartsThrownThisRound;
-        const isWinner = (totalLegScore === 0);
         
+        totalDoubleAttempts += (parseInt(fd.get('checkoutDouble')) || 0);
+        const exactDarts = parseInt(fd.get('dartsCount')) || dartsThrownThisRound;
+        
+        const isWinner = (totalLegScore === 0);
         modal.style.display = 'none';
         
         await completeRound(exactDarts, false); 
@@ -251,8 +255,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showFinalStats() {
+        const avg = totalDartsCount > 0 ? (totalPointsScored / totalDartsCount * 3).toFixed(2) : "0.00";
+        const checkoutPct = totalDoubleAttempts > 0 ? (1 / totalDoubleAttempts * 100).toFixed(0) + "%" : "0%";
+
+        document.getElementById('final-winner-name').innerText = savedNickname;
+        document.getElementById('stat-avg').innerText = avg;
+        document.getElementById('stat-checkout').innerText = checkoutPct;
+        document.getElementById('stat-darts').innerText = totalDartsCount;
+        document.getElementById('stat-score').innerText = `${setsWon} - ${legsWon}`;
+
         document.getElementById('stats-summary-overlay').style.display = 'flex';
-        document.getElementById('btn-back-home').onclick = () => window.location.href = '/';
     }
 
     updateMatchDisplay();
