@@ -44,41 +44,6 @@
             </div>
         </div>
 
-        <section class="history-section">
-            <h2>Derniers Matchs</h2>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Mode</th>
-                            <th>Vainqueur</th>
-                            <th>Moyenne</th>
-                            <th>Checkout</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stats-history-body">
-                        <tr>
-                            <td colspan="5" class="loading-cell">
-                                Récupération des données...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="stats-filters">
-            <div class="filter-group">
-                <label for="period-select">Période :</label>
-                <select id="period-select" onchange="updateStatsByPeriod()">
-                    <option value="day" selected>Jour</option>
-                    <option value="month">Mois</option>
-                    <option value="year">Année</option>
-                </select>
-            </div>
-        </section>
-
         <section class="performance-section">
             <div class="table-wrapper">
                 <table id="performance-table">
@@ -88,7 +53,7 @@
                             <th class="date-col">--/--</th>
                         </tr>
                     </thead>
-                    <tbody id="perf-body">
+                    <tbody id="performance-body">
                         <tr class="theme-header">
                             <td colspan="100%"><strong>Général</strong></td>
                         </tr>
@@ -134,6 +99,43 @@
                 </table>
             </div>
         </section>
+
+        <section class="history-section">
+            <h2>Derniers Matchs</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Mode</th>
+                            <th>Vainqueur</th>
+                            <th>Moyenne</th>
+                            <th>Checkout</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-history-body">
+                        <tr>
+                            <td colspan="5" class="loading-cell">
+                                Récupération des données...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="stats-filters">
+            <div class="filter-group">
+                <label for="period-select">Période :</label>
+                <select id="period-select" onchange="updateStatsByPeriod()">
+                    <option value="day" selected>Jour</option>
+                    <option value="month">Mois</option>
+                    <option value="year">Année</option>
+                </select>
+            </div>
+        </section>
+
+        
 
     </div>
 

@@ -11,7 +11,10 @@ const createGame = async (req, res) => {
 };
 
 const saveTurn = async (req, res) => {
-    const { legId, playerId, points, dartsThrown, remaining, isBust } = req.body;
+    const { 
+        legId, playerId, points, dartsThrown, remaining, isBust,
+        dart1, multiplier1, dart2, multiplier2, dart3, multiplier3 
+    } = req.body;
 
     try {
         const result = await prisma.turn.create({
@@ -21,7 +24,13 @@ const saveTurn = async (req, res) => {
                 points: parseInt(points),
                 dartsThrown: parseInt(dartsThrown) || 3, 
                 remaining: parseInt(remaining) || 0,
-                isBust: isBust || false
+                isBust: isBust || false,
+                dart1: parseInt(dart1) || 0,
+                multiplier1: parseInt(multiplier1) || 1,
+                dart2: parseInt(dart2) || 0,
+                multiplier2: parseInt(multiplier2) || 1,
+                dart3: parseInt(dart3) || 0,
+                multiplier3: parseInt(multiplier3) || 1
             }
         });
         res.json(result);

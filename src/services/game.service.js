@@ -8,7 +8,7 @@ const createNewGame = async (gameConfig) => {
     const { type, playerIds, setsToWin, legsPerSet } = gameConfig;
     const startScore = parseInt(type) || 501;
 
-    return await prisma.game.create({
+    const game = await prisma.game.create({
         data: {
             type: startScore.toString(),
             status: "IN_PROGRESS",
@@ -20,22 +20,25 @@ const createNewGame = async (gameConfig) => {
             sets: {
                 create: [{
                     legs: {
-                        create: [{
-                            
-                        }]
+                        create: [{}]
                     }
                 }]
             }
         },
         include: {
-            players: {
-                include: { player: true }
-            },
             sets: {
                 include: { legs: true }
             }
         }
     });
+
+    const firstSet = game.sets[0];
+    const firstLeg = firstSet.legs[0];
+
+    return {
+        ...game,
+        firstLegId: firstLeg.id
+    };
 };
 
 /**

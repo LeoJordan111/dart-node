@@ -1,92 +1,104 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM chargé, recherche du nickname...");
+    
+    // On récupère le nickname dans l'URL (ex: stats.html?nickname=Léo)
     const params = new URLSearchParams(window.location.search);
-    const nicknameFromUrl = params.get('nickname');
+    const nickname = params.get('nickname');
 
-    if (!nicknameFromUrl) {
-        window.location.href = "/";
+    if (nickname) {
+        console.log("Nickname trouvé :", nickname);
+        refreshStats(nickname);
+    } else {
+        console.error("Aucun nickname trouvé dans l'URL !");
+        // Optionnel : redirection ou message si pas de joueur
+        document.getElementById('stats-title').innerText = "Sélectionnez un joueur";
+    }
+});
+
+async function refreshStats(nickname) {
+    console.log(`--- Tentative de récupération des stats pour : ${nickname} ---`);
+    
+    const titleEl = document.getElementById('stats-title');
+    if (titleEl) titleEl.innerText = `Stats de ${nickname}`;
+
+    try {
+        // 1. Appel des deux API en parallèle
+        const [resGlobal, resLast] = await Promise.all([
+            fetch(`/api/games/stats/global?nickname=${encodeURIComponent(nickname)}`),
+            fetch(`/api/games/stats/last-game?nickname=${encodeURIComponent(nickname)}`)
+        ]);
+
+        const dataGlobal = await resGlobal.json();
+        const dataLast = await resLast.json();
+
+        // Debug : Affiche les résultats dans ta console (F12)
+        console.log("Données Globales reçues :", dataGlobal);
+        console.log("Données Dernier Match reçues :", dataLast);
+
+        // 2. Remplissage de l'historique (Tableau du bas)
+        if (dataGlobal.history) {
+            renderHistory(dataGlobal.history);
+        }
+
+        // 3. Remplissage des cartes du haut (si elles existent)
+        const globalAvgEl = document.getElementById('global-avg');
+        const totalDartsEl = document.getElementById('total-darts');
+        
+        if (globalAvgEl) globalAvgEl.innerText = dataGlobal.globalAverage || "0.00";
+        if (totalDartsEl) totalDartsEl.innerText = dataGlobal.totalDarts || "0";
+
+        // 4. Remplissage du tableau de Performance (Général)
+        // Note : On remplit même si dataLast est null pour remettre à zéro
+        updatePerfRow('global-avg', dataGlobal.globalAverage);
+        updatePerfRow('total-darts', dataGlobal.totalDarts);
+
+        if (dataLast) {
+            updatePerfRow('avg-9', dataLast.avg9);
+            updatePerfRow('avg-12', dataLast.avg12);
+            updatePerfRow('avg-15', dataLast.avg15);
+            updatePerfRow('legs-won', dataLast.legsWon);
+            
+            // Mise à jour de la date dans l'en-tête du tableau
+            const dateCol = document.querySelector('.date-col');
+            if (dateCol && dataLast.date) {
+                dateCol.innerText = new Date(dataLast.date).toLocaleDateString();
+            }
+        } else {
+            console.warn("Aucune donnée trouvée pour le dernier match.");
+        }
+
+    } catch (err) {
+        console.error("ERREUR lors de refreshStats :", err);
+    }
+}
+
+function updatePerfRow(indicator, value) {
+    const row = document.querySelector(`tr[data-indicator="${indicator}"]`);
+    if (row && row.cells[1]) {
+        row.cells[1].innerText = value !== undefined && value !== null ? value : "-";
+        console.log(`MAJ Tableau Performance : ${indicator} -> ${value}`);
+    }
+}
+
+function renderHistory(turns) {
+    const body = document.getElementById('stats-history-body');
+    if (!body) {
+        console.error("ID 'stats-history-body' introuvable dans le HTML");
         return;
     }
 
-    // 1. On remplit d'abord le menu déroulant
-    await populatePlayerSelector(nicknameFromUrl);
-
-    // 2. On charge les données du joueur sélectionné
-    loadStats(nicknameFromUrl);
-});
-
-// Remplit le <select> avec tous les joueurs de la BD
-async function populatePlayerSelector(currentNickname) {
-    const select = document.getElementById('player-stats-select');
-    if (!select) return;
-
-    try {
-        const response = await fetch('/api/players');
-        const players = await response.json();
-
-        select.innerHTML = ''; // On vide au cas où
-
-        players.forEach(player => {
-            const option = document.createElement('option');
-            option.value = player.nickname;
-            option.textContent = player.nickname;
-            
-            // On sélectionne par défaut le joueur qui est dans l'URL
-            if (player.nickname === currentNickname) {
-                option.selected = true;
-            }
-            select.appendChild(option);
-        });
-    } catch (err) {
-        console.error("Erreur chargement liste joueurs:", err);
+    if (!turns || turns.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucune donnée historique</td></tr>';
+        return;
     }
-}
 
-// Fonction appelée au changement du menu déroulant
-function changePlayer(newNickname) {
-    // On met à jour l'URL pour que le rafraîchissement fonctionne aussi
-    const newUrl = `${window.location.pathname}?nickname=${encodeURIComponent(newNickname)}`;
-    window.history.pushState({ path: newUrl }, '', newUrl);
-
-    // On met à jour le titre et les données
-    document.getElementById('stats-title').innerText = `Stats de ${newNickname}`;
-    loadStats(newNickname);
-}
-
-async function loadStats(nickname) {
-    const url = `/api/games/stats?nickname=${encodeURIComponent(nickname)}`;
-    document.getElementById('stats-title').innerText = `Stats de ${nickname}`;
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Erreur serveur");
-        
-        const data = await response.json();
-        
-        // Remplissage du tableau
-        const historyBody = document.getElementById('stats-history-body');
-        historyBody.innerHTML = '';
-
-        if (data.turns && data.turns.length > 0) {
-            data.turns.forEach(turn => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>ID: ${turn.id}</td>
-                    <td>${turn.dart1} | ${turn.dart2} | ${turn.dart3}</td>
-                    <td><strong>${turn.points}</strong></td>
-                    <td>${turn.remaining}</td>
-                    <td>${turn.isBust ? '❌' : '✅'}</td>
-                `;
-                historyBody.appendChild(tr);
-            });
-        } else {
-            historyBody.innerHTML = '<tr><td colspan="5">Aucune donnée pour ce joueur</td></tr>';
-        }
-        
-        // Mise à jour des compteurs globaux
-        document.getElementById('global-avg').innerText = data.globalAverage || "0.00";
-        document.getElementById('total-darts').innerText = data.totalDarts || 0;
-
-    } catch (err) {
-        console.error("Erreur fetch stats:", err);
-    }
+    body.innerHTML = turns.map(t => `
+        <tr>
+            <td>ID: ${t.id}</td>
+            <td>${t.dart1} | ${t.dart2} | ${t.dart3}</td>
+            <td><strong>${t.points}</strong></td>
+            <td>${t.remaining !== null ? t.remaining : '-'}</td>
+            <td>${t.isBust ? '❌' : '✅'}</td>
+        </tr>
+    `).join('');
 }

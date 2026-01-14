@@ -75,8 +75,10 @@ async function validateAndStart() {
             const game = await res.json();
             const route = (mode === 'solo') ? '/gameSolo' : '/game';
             const playerId = payload.playerIds[0];
+
+            const legParam = game.firstLegId ? `&legId=${game.firstLegId}` : '';
             
-            window.location.href = `${route}?id=${game.id}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}&mode=${mode}&playerId=${playerId}`;
+            window.location.href = `${route}?id=${game.id}${legParam}&sets=${payload.setsToWin}&legs=${payload.legsPerSet}&startScore=${payload.type}&mode=${mode}&playerId=${playerId}`;
         }
     } catch (err) {
         console.error("Erreur lors de la création de la partie:", err);
