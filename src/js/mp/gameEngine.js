@@ -11,7 +11,7 @@ let currentMultiplier = 1;
  */
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') || 'solo';
+    const mode = params.get('mode') || 'multi';
     const startScore = parseInt(params.get('startScore')) || 501;
 
     const nbPlayers = parseInt(localStorage.getItem('nb_players')) || 1;
@@ -38,11 +38,32 @@ document.addEventListener('DOMContentLoaded', () => {
  * REFRESH GLOBAL DE LA VUE
  */
 function refreshView() {
-    UI.refreshScoreBoard(GameState.getActivePlayer());
+    const activePlayer = GameState.getActivePlayer();
+    const allPlayers = GameState.state.players;
+
+    UI.refreshScoreBoard(activePlayer);
+
+    const queueContainer = document.getElementById('players-queue');
+    if (queueContainer) {
+        queueContainer.innerHTML = '';
+        allPlayers.forEach((player, index) => {
+            if (index !== GameState.state.currentPlayerIndex) {
+                const isNext = index === (GameState.state.currentPlayerIndex + 1) % allPlayers.length;
+                const card = document.createElement('div');
+                card.className = `queue-card ${isNext ? 'next' : ''}`;
+                card.innerHTML = `
+                    <span class="p-name">${player.name}</span>
+                    <span class="p-score">${player.score}</span>
+                    <span class="p-stats">S:${player.sets} L:${player.legs}</span>
+                `;
+                queueContainer.appendChild(card);
+            }
+        });
+    }
 }
 
 /**
- * GESTION DES CLICS
+ * GESTION DES ÉVÉNEMENTS
  */
 function bindEvents() {
     document.querySelectorAll('.container-num .num').forEach(btn => {
@@ -50,13 +71,13 @@ function bindEvents() {
             if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
 
             const val = parseInt(btn.textContent);
+            if (isNaN(val)) return;
+
             const points = val * currentMultiplier;
             const player = GameState.getActivePlayer();
 
             if (player.score - points < 0 || player.score - points === 1) {
-                while(dartsThrownThisRound < 3) {
-                    processDart(0);
-                }
+                while(dartsThrownThisRound < 3) processDart(0);
                 completeTurn(); 
                 return;
             } else {
@@ -74,15 +95,8 @@ function bindEvents() {
         });
     });
 
-    document.getElementById('double').addEventListener('click', (e) => {
-        currentMultiplier = (currentMultiplier === 2) ? 1 : 2;
-        toggleMultiplierUI();
-    });
-
-    document.getElementById('triple').addEventListener('click', (e) => {
-        currentMultiplier = (currentMultiplier === 3) ? 1 : 3;
-        toggleMultiplierUI();
-    });
+    document.getElementById('double').addEventListener('click', toggleDouble);
+    document.getElementById('triple').addEventListener('click', toggleTriple);
 
     document.getElementById('validate-button').addEventListener('click', () => {
         if (GameState.state.isMatchOver || dartsThrownThisRound === 0) return;
@@ -103,7 +117,6 @@ function bindEvents() {
     document.getElementById('dartsForm').addEventListener('submit', (e) => {
         e.preventDefault();
         UI.closeModal();
-        
         const player = GameState.getActivePlayer();
         
         if (player.score === 0) {
@@ -121,6 +134,12 @@ function bindEvents() {
         }
     });
 
+    document.getElementById('btn-no-score').addEventListener('click', () => {
+        if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
+        while(dartsThrownThisRound < 3) processDart(0);
+        completeTurn();
+    });
+
     document.querySelectorAll('.score-comeback').forEach((btn, index) => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -134,39 +153,16 @@ function bindEvents() {
             }
         });
     });
-
-    document.getElementById('btn-no-score').addEventListener('click', () => {
-        if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
-        while(dartsThrownThisRound < 3) processDart(0);
-        completeTurn();
-    });
 }
 
 /**
- * LOGIQUE DE TRANSITION ET RESET
+ * LOGIQUE DE JEU
  */
 function processDart(points) {
     scoresThisRound[dartsThrownThisRound] = points;
     UI.updateDartInputs(dartsThrownThisRound, points);
     dartsThrownThisRound++;
     GameState.getActivePlayer().stats.totalDarts++;
-}
-
-function resetMultipliers() {
-    currentMultiplier = 1;
-    document.getElementById('double').classList.remove('active');
-    document.getElementById('triple').classList.remove('active');
-}
-
-function toggleMultiplierUI() {
-    document.getElementById('double').classList.toggle('active', currentMultiplier === 2);
-    document.getElementById('triple').classList.toggle('active', currentMultiplier === 3);
-}
-
-function saveRoundToTable() {
-    const player = GameState.getActivePlayer();
-    const tourLabel = `T${GameState.state.roundNumber}`;
-    UI.addHistoryRow(tourLabel, player.name, scoresThisRound, player.score);
 }
 
 function completeTurn() {
@@ -176,11 +172,35 @@ function completeTurn() {
     refreshView();
 }
 
+function saveRoundToTable() {
+    const player = GameState.getActivePlayer();
+    const tourLabel = `T${GameState.state.roundNumber}`;
+    UI.addHistoryRow(tourLabel, player.name, scoresThisRound, player.score);
+}
+
 function resetRoundState() {
     dartsThrownThisRound = 0;
     scoresThisRound = [0, 0, 0];
     UI.clearDartInputs();
     resetMultipliers();
+}
+
+function toggleDouble() {
+    currentMultiplier = (currentMultiplier === 2) ? 1 : 2;
+    document.getElementById('triple').classList.remove('active');
+    document.getElementById('double').classList.toggle('active', currentMultiplier === 2);
+}
+
+function toggleTriple() {
+    currentMultiplier = (currentMultiplier === 3) ? 1 : 3;
+    document.getElementById('double').classList.remove('active');
+    document.getElementById('triple').classList.toggle('active', currentMultiplier === 3);
+}
+
+function resetMultipliers() {
+    currentMultiplier = 1;
+    document.getElementById('double').classList.remove('active');
+    document.getElementById('triple').classList.remove('active');
 }
 
 function handleMatchWin(winner) {
