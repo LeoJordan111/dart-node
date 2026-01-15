@@ -21,12 +21,16 @@ app.get('/setup', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'setup.html'));
 });
 
-app.get('/game', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'game.html'));
-});
+// app.get('/game', (req, res) => {
+//     res.sendFile(path.join(__dirname, 'views', 'game.html'));
+// });
 
 app.get('/gameSolo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'gameSolo.html'));
+});
+
+app.get('/gameMulti', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'game.html'));
 });
 
 app.get('/stats', (req, res) => {

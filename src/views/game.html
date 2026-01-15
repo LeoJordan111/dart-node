@@ -3,46 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/game.css">
+    <link rel="stylesheet" href="/css/gameMulti.css">
     <title>Match en cours</title>
 </head>
 <body>
 
     <main class="game-container">
-        <div class="container-score">
-            <div id="score-layout-solo">
-                <div class="match-meta">
-                    <span id="set-count-solo">Sets: 0</span> — <span id="leg-count-solo">Legs: 0</span>
-                </div>
-                <h2 id="current-player-name-solo">Joueur 1</h2>
-            </div>
-
-            <div id="score-layout-pvp">
-                <div class="match-meta-pvp">
-                    <div class="player-info" id="p1-info">
-                        <span class="p-name">Joueur 1</span>
-                        <div class="p-stats">
-                            <span class="p-sets">S: 0</span> | <span class="p-legs">L: 0</span>
-                        </div>
-                        <div class="p-current-score">501</div>
-                    </div>
-
-                    <div class="vs-divider">VS</div>
-
-                    <div class="player-info" id="p2-info">
-                        <span class="p-name">Joueur 1</span>
-                        <div class="p-stats">
-                            <span class="p-sets">S: 0</span> | <span class="p-legs">L: 0</span>
-                        </div>
-                        <div class="p-current-score">501</div>
-                    </div>
+    <div class="container-score">
+        <div id="active-player-focus">
+            <div class="focus-header">
+                <span id="active-player-name">JOUEUR 1</span>
+                <div class="active-stats-mini">
+                    S: <span id="active-sets">0</span> | L: <span id="active-legs">0</span>
                 </div>
             </div>
+        <div id="main-score">501</div>
+    </div>
 
-            <div id="main-score-wrapper">
-                <div id="main-score">501</div>
-            </div>
+    <div id="players-queue" class="players-queue">
         </div>
+</div>
 
         <div class="container-dart" id="current-throws">
             <div class="dart">
@@ -156,6 +136,6 @@
         </div>
     </div>
 
-    <script type="module" src="/js/pvp/gameEngine.js"></script>
+    <script type="module" src="/js/mp/gameEngine.js"></script>
 </body>
 </html>

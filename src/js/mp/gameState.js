@@ -1,0 +1,90 @@
+// --- ÉTAT INITIAL ---
+export let state = {
+    players: [],
+    currentPlayerIndex: 0,
+    roundNumber: 1,
+    isMatchOver: false,
+    config: {
+        setsToWin: 1,
+        legsPerSet: 3
+    }
+};
+
+/**
+ * INITIALISATION
+ */
+export function setupMatch(playerNames, sets, legs, mode, startScore = 501) {
+    state.players = playerNames.map((name, index) => ({
+        id: index + 1,
+        name: name,
+        score: startScore,
+        sets: 0,
+        legs: 0,
+        stats: { totalDarts: 0, pointsScored: 0 }
+    }));
+
+    state.config.setsToWin = sets;
+    state.config.legsPerSet = legs;
+    state.currentPlayerIndex = 0;
+    state.roundNumber = 1;
+    state.isMatchOver = false;
+}
+
+/**
+ * ACTIONS DE SCORE
+ */
+export function getActivePlayer() {
+    return state.players[state.currentPlayerIndex];
+}
+
+export function updatePlayerScore(points) {
+    const player = getActivePlayer();
+    if (player) {
+        player.score -= points;
+        player.stats.pointsScored += points;
+    }
+}
+
+export function nextTurn() {
+    const totalPlayers = state.players.length;
+    
+    if (state.currentPlayerIndex === totalPlayers - 1) {
+        state.roundNumber++;
+    }
+
+    state.currentPlayerIndex = (state.currentPlayerIndex + 1) % totalPlayers;
+}
+
+/**
+ * GESTION DES VICTOIRES
+ */
+export function winLeg(player) {
+    player.legs++;
+
+    if (player.legs >= state.config.legsPerSet) {
+        player.sets++;
+        state.players.forEach(p => p.legs = 0);
+        
+        if (player.sets >= state.config.setsToWin) {
+            state.isMatchOver = true;
+            return "MATCH_OVER";
+        }
+        return "SET_OVER";
+    }
+    return "LEG_OVER";
+}
+
+export function resetScoresForNewLeg(startScore = 501) {
+    state.players.forEach(p => p.score = startScore);
+    state.currentPlayerIndex = 0;
+    state.roundNumber = 1;
+}
+
+export function undoLastDartScore(points) {
+    const player = getActivePlayer();
+    if (player) {
+        player.score += points;
+        player.stats.pointsScored -= points;
+        if (player.stats.totalDarts > 0) player.stats.totalDarts--;
+    }
+}

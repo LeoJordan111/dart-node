@@ -60,6 +60,16 @@
                 <button class="btn-save-quick" onclick="addPlayerQuick()">Enregistrer</button>
             </div>
 
+            <div class="setup-group">
+                <label for="nb-players">Nombre de joueurs :</label>
+                <select id="nb-players" onchange="updatePlayerInputs(this.value)">
+                    <option value="1">1 joueur</option>
+                    <option value="2">2 Joueurs</option>
+                    <option value="3">3 Joueurs</option>
+                    <option value="4">4 Joueurs</option>
+                </select>
+            </div>
+
             <p id="instruction" class="field-info">Choisissez les joueurs pour commencer.</p>
             
             <div id="player-checkboxes" class="player-grid">
