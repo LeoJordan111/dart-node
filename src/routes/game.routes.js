@@ -11,5 +11,6 @@ router.post('/:id/finish', gameController.finishGame);
 // --- statistiques ---
 router.get('/stats/global', statsController.getGlobalStats); 
 router.get('/stats/last-game', statsController.getLastGameDetails);
+router.get('/stats/last-days', statsController.getLastDaysStats);
 
 module.exports = router;

@@ -44,13 +44,23 @@
             </div>
         </div>
 
+        <section class="stats-filters">
+            <div class="filter-group">
+                <label for="period-select">Période :</label>
+                <select id="period-select" onchange="updateStatsByPeriod()">
+                    <option value="day" selected>Jour</option>
+                    <option value="month">Mois</option>
+                    <option value="year">Année</option>
+                </select>
+            </div>
+        </section>
+
         <section class="performance-section">
             <div class="table-wrapper">
                 <table id="performance-table">
                     <thead>
                         <tr id="perf-date-header">
                             <th>Indicateurs</th>
-                            <th class="date-col">--/--</th>
                         </tr>
                     </thead>
                     <tbody id="performance-body">
@@ -122,20 +132,7 @@
                     </tbody>
                 </table>
             </div>
-        </section>
-
-        <section class="stats-filters">
-            <div class="filter-group">
-                <label for="period-select">Période :</label>
-                <select id="period-select" onchange="updateStatsByPeriod()">
-                    <option value="day" selected>Jour</option>
-                    <option value="month">Mois</option>
-                    <option value="year">Année</option>
-                </select>
-            </div>
-        </section>
-
-        
+        </section>        
 
     </div>
 

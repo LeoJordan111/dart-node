@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetMultipliers();
     }
 
-    async function completeRound(exactCount = 3, isBust = false) {
+    async function completeRound(exactCount, isBust = false) {
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
 
         if (!currentLegId || currentLegId == 0) {
@@ -103,31 +103,36 @@ document.addEventListener('DOMContentLoaded', () => {
             dart3: dartsDetailThisRound[2].value,
             multiplier3: dartsDetailThisRound[2].multiplier,
             points: totalRound,
-            dartsThrown: exactCount,
+            dartsThrown: exactCount, 
             remaining: totalLegScore,
             isBust: isBust
         };
 
         try {
-            await fetch('/api/games/turn', {
+            const response = await fetch('/api/games/turn', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(turnData)
             });
+
+            if (!response.ok) throw new Error("Erreur serveur lors de l'enregistrement");
+
+            totalDartsCount += exactCount;
+            totalPointsScored += totalRound;
+
+            renderHistoryRow(totalRound);
+            
+            roundNumber++;
+            dartsThrownThisRound = 0;
+            scoresThisRound = [0, 0, 0];
+            dartsDetailThisRound = [{value:0,multiplier:1},{value:0,multiplier:1},{value:0,multiplier:1}];
+            scoreInputs.forEach(input => input.textContent = '-');
+            resetMultipliers();
+
         } catch (err) {
             console.error("Erreur API:", err);
+            alert("Le score n'a pas pu être sauvegardé. Vérifiez votre connexion.");
         }
-
-        totalDartsCount += exactCount;
-        totalPointsScored += totalRound;
-
-        renderHistoryRow(totalRound);
-        roundNumber++;
-        dartsThrownThisRound = 0;
-        scoresThisRound = [0, 0, 0];
-        dartsDetailThisRound = [{value:0,multiplier:1},{value:0,multiplier:1},{value:0,multiplier:1}];
-        scoreInputs.forEach(input => input.textContent = '-');
-        resetMultipliers();
     }
 
     function recordDart(points, val = 0, mult = 1) {
@@ -150,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- ÉCOUTEURS ---
-
     doubleBtn.addEventListener('click', () => {
         const isActive = doubleBtn.classList.contains('active');
         resetMultipliers();
@@ -204,26 +208,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     validateBtn.addEventListener('click', async () => {
         if (dartsThrownThisRound === 0) return;
+
+
         const isBust = (scoresThisRound.every(s => s === 0) && totalLegScore > 0);
         
         if (totalLegScore <= 170 && !isBust && modal.style.display !== 'block') {
             modal.style.display = 'block';
             return;
         }
+
         await completeRound(dartsThrownThisRound, isBust);
     });
+
 
     dartsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(dartsForm);
         
+        const exactDartsFromModal = parseInt(fd.get('dartsCount'));
         totalDoubleAttempts += (parseInt(fd.get('checkoutDouble')) || 0);
-        const exactDarts = parseInt(fd.get('dartsCount')) || dartsThrownThisRound;
         
         const isWinner = (totalLegScore === 0);
         modal.style.display = 'none';
         
-        await completeRound(exactDarts, false); 
+        await completeRound(exactDartsFromModal, false); 
 
         if (isWinner) {
             handleLegWin();

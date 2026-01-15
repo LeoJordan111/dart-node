@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM chargé, recherche du nickname...");
     
-    // On récupère le nickname dans l'URL (ex: stats.html?nickname=Léo)
     const params = new URLSearchParams(window.location.search);
     const nickname = params.get('nickname');
 
@@ -10,66 +9,68 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshStats(nickname);
     } else {
         console.error("Aucun nickname trouvé dans l'URL !");
-        // Optionnel : redirection ou message si pas de joueur
         document.getElementById('stats-title').innerText = "Sélectionnez un joueur";
     }
 });
 
+
+
 async function refreshStats(nickname) {
-    console.log(`--- Tentative de récupération des stats pour : ${nickname} ---`);
-    
-    const titleEl = document.getElementById('stats-title');
-    if (titleEl) titleEl.innerText = `Stats de ${nickname}`;
-
     try {
-        // 1. Appel des deux API en parallèle
-        const [resGlobal, resLast] = await Promise.all([
-            fetch(`/api/games/stats/global?nickname=${encodeURIComponent(nickname)}`),
-            fetch(`/api/games/stats/last-game?nickname=${encodeURIComponent(nickname)}`)
-        ]);
+        const resLastDays = await fetch(`/api/games/stats/last-days?nickname=${encodeURIComponent(nickname)}&days=3`);
+        let daysData = await resLastDays.json();
 
-        const dataGlobal = await resGlobal.json();
-        const dataLast = await resLast.json();
-
-        // Debug : Affiche les résultats dans ta console (F12)
-        console.log("Données Globales reçues :", dataGlobal);
-        console.log("Données Dernier Match reçues :", dataLast);
-
-        // 2. Remplissage de l'historique (Tableau du bas)
-        if (dataGlobal.history) {
-            renderHistory(dataGlobal.history);
+        while (daysData.length < 3) {
+            daysData.push({ date: null }); 
         }
 
-        // 3. Remplissage des cartes du haut (si elles existent)
-        const globalAvgEl = document.getElementById('global-avg');
-        const totalDartsEl = document.getElementById('total-darts');
+        const headerRow = document.getElementById('perf-date-header');
+        headerRow.innerHTML = '<th>Indicateurs</th>';
         
-        if (globalAvgEl) globalAvgEl.innerText = dataGlobal.globalAverage || "0.00";
-        if (totalDartsEl) totalDartsEl.innerText = dataGlobal.totalDarts || "0";
+        daysData.forEach(day => {
+            const dateStr = day.date 
+                ? new Date(day.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+                : "--/--";
+            headerRow.insertAdjacentHTML('beforeend', `<th class="date-col">${dateStr}</th>`);
+        });
 
-        // 4. Remplissage du tableau de Performance (Général)
-        // Note : On remplit même si dataLast est null pour remettre à zéro
-        updatePerfRow('global-avg', dataGlobal.globalAverage);
-        updatePerfRow('total-darts', dataGlobal.totalDarts);
+        const indicators = [
+            'global-avg', 
+            'checkout-rate', 
+            'total-darts', 
+            'avg-9', 
+            'avg-12', 
+            'avg-15', 
+            'legs-won', 
+            'darts-per-leg'
+        ];
 
-        if (dataLast) {
-            updatePerfRow('avg-9', dataLast.avg9);
-            updatePerfRow('avg-12', dataLast.avg12);
-            updatePerfRow('avg-15', dataLast.avg15);
-            updatePerfRow('legs-won', dataLast.legsWon);
-            
-            // Mise à jour de la date dans l'en-tête du tableau
-            const dateCol = document.querySelector('.date-col');
-            if (dateCol && dataLast.date) {
-                dateCol.innerText = new Date(dataLast.date).toLocaleDateString();
-            }
-        } else {
-            console.warn("Aucune donnée trouvée pour le dernier match.");
-        }
+        indicators.forEach(ind => updatePerfRowMultiColumns(ind, daysData));
 
-    } catch (err) {
-        console.error("ERREUR lors de refreshStats :", err);
+    } catch (err) { 
+        console.error("Erreur stats:", err); 
     }
+}
+function updatePerfRowMultiColumns(indicator, daysData) {
+    const row = document.querySelector(`tr[data-indicator="${indicator}"]`);
+    if (!row) return;
+
+    while (row.cells.length > 1) row.deleteCell(1);
+
+    daysData.forEach(day => {
+        const newCell = row.insertCell(-1);
+        let value = day[indicator];
+        
+        if (value === null || value === undefined) {
+            newCell.innerText = "-";
+        } else if (indicator.includes('avg') || indicator.includes('darts-per-leg')) {
+            newCell.innerText = parseFloat(value).toFixed(2);
+        } else if (indicator === 'checkout-rate') {
+            newCell.innerText = value + "%";
+        } else {
+            newCell.innerText = value;
+        }
+    });
 }
 
 function updatePerfRow(indicator, value) {
