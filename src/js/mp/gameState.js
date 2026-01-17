@@ -88,3 +88,23 @@ export function undoLastDartScore(points) {
         if (player.stats.totalDarts > 0) player.stats.totalDarts--;
     }
 }
+
+export async function saveTurnToDatabase(turnData) {
+    try {
+        const response = await fetch('/api/games/turn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(turnData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.details || "Erreur lors de l'enregistrement");
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error("Détails de l'erreur Prisma/API:", error);
+        alert("Erreur de sauvegarde : le tour n'a pas été enregistré en base de données.");
+    }
+}

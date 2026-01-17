@@ -5,6 +5,7 @@ import { UI } from './gameUI.js';
 let dartsThrownThisRound = 0;
 let scoresThisRound = [0, 0, 0];
 let currentMultiplier = 1;
+let multipliersThisRound = [1, 1, 1];
 
 /**
  * INITIALISATION AU CHARGEMENT
@@ -75,13 +76,21 @@ function bindEvents() {
 
             const points = val * currentMultiplier;
             const player = GameState.getActivePlayer();
+            const potentialScore = player.score - points;
 
-            if (player.score - points < 0 || player.score - points === 1) {
-                while(dartsThrownThisRound < 3) processDart(0);
+            if (potentialScore < 0 || potentialScore === 1) {
+                multipliersThisRound[dartsThrownThisRound] = currentMultiplier;
+                processDart(points);
+                
+                while(dartsThrownThisRound < 3) {
+                    multipliersThisRound[dartsThrownThisRound] = 1;
+                    processDart(0);
+                }
                 completeTurn(); 
                 return;
             } else {
                 GameState.updatePlayerScore(points);
+                multipliersThisRound[dartsThrownThisRound] = currentMultiplier;
                 processDart(points);
             }
             
@@ -114,23 +123,33 @@ function bindEvents() {
         }
     });
 
-    document.getElementById('dartsForm').addEventListener('submit', (e) => {
+    document.getElementById('dartsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         UI.closeModal();
-        const player = GameState.getActivePlayer();
         
+        const player = GameState.getActivePlayer();
+        const params = new URLSearchParams(window.location.search);
+        const gameId = params.get('id');
+
         if (player.score === 0) {
+
+            await completeTurn(); 
+
             const result = GameState.winLeg(player);
+
+            await fetch(`/api/games/${gameId}/finish-leg`, {
+                method: 'POST',
+                body: JSON.stringify({ winnerId: player.id })
+            });
+
             if (result === "MATCH_OVER") {
                 handleMatchWin(player);
             } else {
-                const params = new URLSearchParams(window.location.search);
                 GameState.resetScoresForNewLeg(parseInt(params.get('startScore')) || 501);
-                resetRoundState();
                 refreshView();
             }
         } else {
-            completeTurn();
+            await completeTurn(); 
         }
     });
 
@@ -162,10 +181,32 @@ function processDart(points) {
     scoresThisRound[dartsThrownThisRound] = points;
     UI.updateDartInputs(dartsThrownThisRound, points);
     dartsThrownThisRound++;
+
     GameState.getActivePlayer().stats.totalDarts++;
 }
 
-function completeTurn() {
+async function completeTurn() {
+    const activePlayer = GameState.getActivePlayer();
+    const params = new URLSearchParams(window.location.search);
+    const currentLegId = params.get('legId'); 
+
+    const turnPayload = {
+        legId: parseInt(currentLegId),
+        playerId: activePlayer.id,
+        points: scoresThisRound.reduce((a, b) => a + b, 0),
+        dartsThrown: dartsThrownThisRound,
+        remaining: activePlayer.score,
+        isBust: (activePlayer.score > 0 && scoresThisRound.every((s, i) => s === 0 && i < dartsThrownThisRound)),
+        dart1: scoresThisRound[0] / multipliersThisRound[0],
+        multiplier1: multipliersThisRound[0],
+        dart2: scoresThisRound[1] / multipliersThisRound[1],
+        multiplier2: multipliersThisRound[1],
+        dart3: scoresThisRound[2] / multipliersThisRound[2],
+        multiplier3: multipliersThisRound[2]
+    };
+
+    await GameState.saveTurnToDatabase(turnPayload);
+
     saveRoundToTable();
     resetRoundState();
     GameState.nextTurn();
@@ -181,6 +222,7 @@ function saveRoundToTable() {
 function resetRoundState() {
     dartsThrownThisRound = 0;
     scoresThisRound = [0, 0, 0];
+    multipliersThisRound = [1, 1, 1];
     UI.clearDartInputs();
     resetMultipliers();
 }
