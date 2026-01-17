@@ -52,19 +52,33 @@ async function validateAndStart() {
         return alert("Veuillez sélectionner au moins un joueur.");
     }
 
-    localStorage.clear();
+    // --- NETTOYAGE PROPRE DU LOCALSTORAGE ---
+    localStorage.clear(); 
+    
     localStorage.setItem('nb_players', nbPlayers);
+    
     checkedInputs.forEach((input, index) => {
         localStorage.setItem(`player${index + 1}_name`, input.getAttribute('data-nickname'));
+        localStorage.setItem(`player${index + 1}_id`, input.value);
     });
 
+    // --- RÉCUPÉRATION PRÉCISE DES PARAMÈTRES ---
+    const gameType = document.getElementById('game-type').value;
+    const setsInput = document.getElementById('sets-to-win').value;
+    const legsInput = document.getElementById('legs-per-set').value;
+
     const payload = {
-        type: document.getElementById('game-type').value,
-        setsToWin: parseInt(document.getElementById('sets-to-win').value) || 1,
-        legsPerSet: parseInt(document.getElementById('legs-per-set').value) || 3,
+        type: gameType,
+        setsToWin: setsInput ? parseInt(setsInput) : 1,
+        legsPerSet: legsInput ? parseInt(legsInput) : 3,
         playerIds: checkedInputs.map(input => parseInt(input.value)),
         mode: 'multi'
     };
+
+    localStorage.setItem('game_sets', payload.setsToWin);
+    localStorage.setItem('game_legs', payload.legsPerSet);
+
+    console.log("Envoi du payload:", payload);
 
     try {
         const res = await fetch('/api/games/create', {
@@ -75,15 +89,16 @@ async function validateAndStart() {
 
         if (res.ok) {
             const game = await res.json();
-            const route = '/gameMulti'; 
             
             const queryParams = new URLSearchParams({
                 id: game.id,
                 legId: game.firstLegId || 0,
-                startScore: payload.type
+                startScore: payload.type,
+                sets: payload.setsToWin,
+                legs: payload.legsPerSet
             });
 
-            window.location.href = `${route}?${queryParams.toString()}`;
+            window.location.href = `/gameMulti?${queryParams.toString()}`;
         }
     } catch (err) { 
         console.error("Erreur création partie:", err); 
