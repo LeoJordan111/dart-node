@@ -17,6 +17,9 @@ const saveTurn = async (req, res) => {
     } = req.body;
 
     try {
+        const now = new Date();
+        const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+
         const result = await prisma.turn.create({
             data: {
                 legId: parseInt(legId),
@@ -26,6 +29,8 @@ const saveTurn = async (req, res) => {
                 remaining: parseInt(remaining) || 0,
                 isBust: isBust || false,
                 
+                createdAt: localDate,
+
                 dart1: parseInt(req.body.dart1) || 0,
                 multiplier1: parseInt(req.body.multiplier1) || 1,
                 dart2: parseInt(req.body.dart2) || 0,
