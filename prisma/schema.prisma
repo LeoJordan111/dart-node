@@ -21,6 +21,7 @@ model Game {
   type      String       @default("501")
   status    String       @default("IN_PROGRESS")
   createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt @default(now())
   players   GamePlayer[]
   sets      Set[]
 }
@@ -29,6 +30,7 @@ model Set {
   id       Int      @id @default(autoincrement())
   gameId   Int
   winnerId Int?
+  createdAt DateTime @default(now())
   game     Game     @relation(fields: [gameId], references: [id])
   legs     Leg[]
 }
@@ -37,7 +39,8 @@ model Leg {
   id            Int      @id @default(autoincrement())
   setId         Int
   winnerId      Int?
-  dartsToFinish Int?    
+  dartsToFinish Int? 
+  createdAt     DateTime @default(now())   
   set           Set      @relation(fields: [setId], references: [id])
   turns         Turn[]
 }

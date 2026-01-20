@@ -1,17 +1,18 @@
 const prisma = require('../database/client');
+const TimeService = require('./time.service');
 
-/**
- * Crée une partie avec sa configuration, lie les joueurs 
- * et initialise le premier Set et le premier Leg.
- */
 const createNewGame = async (gameConfig) => {
-    const { type, playerIds, setsToWin, legsPerSet } = gameConfig;
+    const { type, playerIds, createdAt } = gameConfig;
     const startScore = parseInt(type) || 501;
+    
+    // Si le contrôleur a envoyé une date, on l'utilise, sinon on en génère une
+    const localNow = createdAt || TimeService.getLocalDate();
 
     const game = await prisma.game.create({
         data: {
             type: startScore.toString(),
             status: "IN_PROGRESS",
+            createdAt: localNow, // Utilise la date unique
             players: {
                 create: playerIds.map(id => ({
                     player: { connect: { id: parseInt(id) } }
@@ -19,41 +20,36 @@ const createNewGame = async (gameConfig) => {
             },
             sets: {
                 create: [{
+                    createdAt: localNow, // Même heure pour le set
                     legs: {
-                        create: [{}]
+                        create: [{
+                            createdAt: localNow // Même heure pour le leg
+                        }]
                     }
                 }]
             }
         },
         include: {
-            sets: {
-                include: { legs: true }
-            }
+            sets: { include: { legs: true } }
         }
     });
 
-    const firstSet = game.sets[0];
-    const firstLeg = firstSet.legs[0];
-
-    return {
-        ...game,
-        firstLegId: firstLeg.id
-    };
+    const firstLeg = game.sets[0].legs[0];
+    return { ...game, firstLegId: firstLeg.id };
 };
 
-/**
- * Historiques
- */
 const getAllGames = async () => {
-    return await prisma.game.findMany({
-        include: {
-            players: { include: { player: true } }
-        },
+    const games = await prisma.game.findMany({
+        include: { players: { include: { player: true } } },
         orderBy: { createdAt: 'desc' }
     });
+
+    return games.map(game => ({
+        ...game,
+        duration: game.status === "FINISHED" 
+            ? TimeService.calculateDuration(game.createdAt, game.updatedAt) 
+            : "En cours"
+    }));
 };
 
-module.exports = {
-    createNewGame,
-    getAllGames
-};
+module.exports = { createNewGame, getAllGames };
