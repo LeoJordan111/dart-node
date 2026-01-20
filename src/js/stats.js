@@ -1,58 +1,96 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM chargé, recherche du nickname...");
-    
     const params = new URLSearchParams(window.location.search);
     const nickname = params.get('nickname');
 
     if (nickname) {
-        console.log("Nickname trouvé :", nickname);
         refreshStats(nickname);
     } else {
-        console.error("Aucun nickname trouvé dans l'URL !");
         document.getElementById('stats-title').innerText = "Sélectionnez un joueur";
     }
 });
 
-
-
 async function refreshStats(nickname) {
-    try {
-        const resLastDays = await fetch(`/api/games/stats/last-days?nickname=${encodeURIComponent(nickname)}&days=3`);
-        let daysData = await resLastDays.json();
+    const encodedNick = encodeURIComponent(nickname);
 
-        while (daysData.length < 3) {
-            daysData.push({ date: null }); 
-        }
+    Promise.all([
+        fetchGlobalCards(encodedNick),     
+        fetchPerformance(encodedNick),      
+        fetchCheckouts(encodedNick),        
+        fetchLegRecords(encodedNick),       
+        fetchScoreDistribution(encodedNick)
+    ]);
+}
 
-        const headerRow = document.getElementById('perf-date-header');
-        headerRow.innerHTML = '<th>Indicateurs</th>';
-        
-        daysData.forEach(day => {
-            const dateStr = day.date 
-                ? new Date(day.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-                : "--/--";
-            headerRow.insertAdjacentHTML('beforeend', `<th class="date-col">${dateStr}</th>`);
-        });
-
-        const indicators = [
-            'global-avg', 
-            'checkout-rate', 
-            'total-darts', 
-            'avg-9', 
-            'avg-12', 
-            'avg-15', 
-            'legs-won', 
-            'darts-per-leg'
-        ];
-
-        indicators.forEach(ind => updatePerfRowMultiColumns(ind, daysData));
-
-    } catch (err) { 
-        console.error("Erreur stats:", err); 
+async function fetchGlobalCards(nick) {
+    const res = await fetch(`/api/games/stats/global?nickname=${nick}`);
+    const data = await res.json();
+    if (data) {
+        document.getElementById('global-avg').innerText = data.globalAverage || "0.00";
+        document.getElementById('global-checkout').innerText = (data.checkoutRate || "0") + "%";
+        document.getElementById('total-darts').innerText = data.totalDarts || "0";
+        renderHistory(data.history);
     }
 }
+
+function updateTableHeader(daysData) {
+    const headerRow = document.getElementById('perf-date-header');
+    if (!headerRow) return;
+    headerRow.innerHTML = '<th>Indicateurs</th>';
+    daysData.forEach(day => {
+        const dateStr = day.date 
+            ? new Date(day.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+            : "--/--";
+        headerRow.insertAdjacentHTML('beforeend', `<th class="date-col">${dateStr}</th>`);
+    });
+}
+
+async function fetchPerformance(nick) {
+    const res = await fetch(`/api/games/stats/last-days?nickname=${nick}&days=3`);
+    const data = await res.json();
+    while (data.length < 3) data.push({ date: null });
+    
+    updateTableHeader(data);
+    const indicators = ['global-avg', 'total-darts', 'avg-9', 'avg-12', 'avg-15', 'legs-won', 'darts-per-leg'];
+    indicators.forEach(ind => updatePerfRowMultiColumns(ind, data));
+}
+
+async function fetchCheckouts(nick) {
+    const res = await fetch(`/api/games/stats/checkouts?nickname=${nick}&days=3`);
+    const data = await res.json();
+    if (!data) return;
+    while (data.length < 3) data.push({ date: null });
+    const indicators = ['checkout-rate', 'checkout-ratio', 'checkout-avg', 'checkout-max'];
+    indicators.forEach(ind => updatePerfRowMultiColumns(ind, data));
+}
+
+async function fetchLegRecords(nick) {
+    const res = await fetch(`/api/games/stats/legs?nickname=${nick}&days=3`);
+    const data = await res.json();
+    while (data.length < 3) data.push({ date: null });
+    const indicators = ['leg-best', 'leg-best-avg', 'leg-hightscore'];
+    indicators.forEach(ind => updatePerfRowMultiColumns(ind, data));
+}
+
+async function fetchScoreDistribution(nick) {
+    const res = await fetch(`/api/games/stats/distribution?nickname=${nick}&days=3`);
+    const data = await res.json();
+    while (data.length < 3) data.push({ date: null });
+
+    const allIndicators = [
+        "score-noScore", "score-1-19", "score-20+", "score-40+", "score-60+", 
+        "score-80+", "score-100+", "score-120+", "score-140+", "score-160+", "score-180",
+        "score-noScore-pct", "score-1-19-pct", "score-20-pct", "score-40-pct", 
+        "score-60-pct", "score-80-pct", "score-100-pct", "score-120-pct", 
+        "score-140-pct", "score-160-pct", "score-180-pct"
+    ];
+
+    allIndicators.forEach(ind => {
+        updatePerfRowMultiColumns(ind, data);
+    });
+}
+
 function updatePerfRowMultiColumns(indicator, daysData) {
-    const row = document.querySelector(`tr[data-indicator="${indicator}"]`);
+    const row = document.querySelector(`tr[data-indicator="${CSS.escape(indicator)}"]`);
     if (!row) return;
 
     while (row.cells.length > 1) row.deleteCell(1);
@@ -61,24 +99,18 @@ function updatePerfRowMultiColumns(indicator, daysData) {
         const newCell = row.insertCell(-1);
         let value = day[indicator];
         
-        if (value === null || value === undefined) {
+        if (value === null || value === undefined || day.date === null) {
             newCell.innerText = "-";
-        } else if (indicator.includes('avg') || indicator.includes('darts-per-leg')) {
-            newCell.innerText = parseFloat(value).toFixed(2);
         } else if (indicator === 'checkout-rate') {
-            newCell.innerText = value + "%";
+            newCell.innerText = Math.round(value) + "%";
+        } else if (typeof value === 'string' && value.includes('%')) {
+            newCell.innerText = value;
+        } else if (typeof value === 'number' && !Number.isInteger(value)) {
+            newCell.innerText = value.toFixed(2);
         } else {
             newCell.innerText = value;
         }
     });
-}
-
-function updatePerfRow(indicator, value) {
-    const row = document.querySelector(`tr[data-indicator="${indicator}"]`);
-    if (row && row.cells[1]) {
-        row.cells[1].innerText = value !== undefined && value !== null ? value : "-";
-        console.log(`MAJ Tableau Performance : ${indicator} -> ${value}`);
-    }
 }
 
 function renderHistory(turns) {
