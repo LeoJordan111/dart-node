@@ -13,7 +13,7 @@ const createGame = async (req, res) => {
 const saveTurn = async (req, res) => {
     const { 
         legId, playerId, points, dartsThrown, remaining, isBust,
-        dart1, multiplier1, dart2, multiplier2, dart3, multiplier3 
+        darts
     } = req.body;
 
     try {
@@ -25,18 +25,34 @@ const saveTurn = async (req, res) => {
                 dartsThrown: parseInt(dartsThrown) || 3, 
                 remaining: parseInt(remaining) || 0,
                 isBust: isBust || false,
-                dart1: parseInt(dart1) || 0,
-                multiplier1: parseInt(multiplier1) || 1,
-                dart2: parseInt(dart2) || 0,
-                multiplier2: parseInt(multiplier2) || 1,
-                dart3: parseInt(dart3) || 0,
-                multiplier3: parseInt(multiplier3) || 1
+                
+                dart1: parseInt(req.body.dart1) || 0,
+                multiplier1: parseInt(req.body.multiplier1) || 1,
+                dart2: parseInt(req.body.dart2) || 0,
+                multiplier2: parseInt(req.body.multiplier2) || 1,
+                dart3: parseInt(req.body.dart3) || 0,
+                multiplier3: parseInt(req.body.multiplier3) || 1,
+
+                darts: {
+                    create: darts.map(d => ({
+                        value: parseInt(d.value) || 0,
+                        multiplier: parseInt(d.multiplier) || 1,
+                        isCheckoutAttempt: d.isCheckoutAttempt || false
+                    }))
+                }
+            },
+            include: {
+                darts: true
             }
         });
+
         res.json(result);
     } catch (error) {
-        console.error("Détail erreur Prisma Turn:", error);
-        res.status(500).json({ error: "Erreur lors de l'enregistrement de la volée", details: error.message });
+        console.error("Détail erreur Prisma Turn/Dart:", error);
+        res.status(500).json({ 
+            error: "Erreur lors de l'enregistrement de la volée", 
+            details: error.message 
+        });
     }
 };
 

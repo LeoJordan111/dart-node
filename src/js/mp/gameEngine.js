@@ -125,15 +125,16 @@ function bindEvents() {
 
     document.getElementById('dartsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const formData = new FormData(e.target);
+        const checkoutAttempts = parseInt(formData.get('checkoutDouble')) || 0;
         UI.closeModal();
         
         const player = GameState.getActivePlayer();
         const params = new URLSearchParams(window.location.search);
         const gameId = params.get('id');
 
-        if (player.score === 0) {
-
-            await completeTurn(); 
+        if (GameState.getActivePlayer().score === 0) {
+            await completeTurn(checkoutAttempts);
 
             const result = GameState.winLeg(player);
 
@@ -149,14 +150,19 @@ function bindEvents() {
                 refreshView();
             }
         } else {
-            await completeTurn(); 
+            await completeTurn(checkoutAttempts);
         }
     });
 
     document.getElementById('btn-no-score').addEventListener('click', () => {
-        if (GameState.state.isMatchOver || dartsThrownThisRound >= 3) return;
-        while(dartsThrownThisRound < 3) processDart(0);
-        completeTurn();
+        if (GameState.state.isMatchOver) return;
+
+        while (dartsThrownThisRound < 3) {
+            multipliersThisRound[dartsThrownThisRound] = 1; 
+            processDart(0);
+        }
+
+        completeTurn(0);
     });
 
     document.querySelectorAll('.score-comeback').forEach((btn, index) => {
@@ -185,26 +191,37 @@ function processDart(points) {
     GameState.getActivePlayer().stats.totalDarts++;
 }
 
-async function completeTurn() {
+/**
+ * LOGIQUE DE JEU - SAUVEGARDE DU TOUR ET DES FLECHETTES
+ */
+async function completeTurn(checkoutAttempts = 0) {
     const activePlayer = GameState.getActivePlayer();
     const params = new URLSearchParams(window.location.search);
     const currentLegId = params.get('legId'); 
 
-    const turnPayload = {
-        legId: parseInt(currentLegId),
-        playerId: activePlayer.id,
-        points: scoresThisRound.reduce((a, b) => a + b, 0),
-        dartsThrown: dartsThrownThisRound,
-        remaining: activePlayer.score,
-        isBust: (activePlayer.score > 0 && scoresThisRound.every((s, i) => s === 0 && i < dartsThrownThisRound)),
-        dart1: scoresThisRound[0] / multipliersThisRound[0],
-        multiplier1: multipliersThisRound[0],
-        dart2: scoresThisRound[1] / multipliersThisRound[1],
-        multiplier2: multipliersThisRound[1],
-        dart3: scoresThisRound[2] / multipliersThisRound[2],
-        multiplier3: multipliersThisRound[2]
-    };
+const turnPayload = {
+    legId: parseInt(currentLegId),
+    playerId: activePlayer.id,
+    points: scoresThisRound.reduce((a, b) => a + b, 0),
+    dartsThrown: dartsThrownThisRound,
+    remaining: activePlayer.score,
+    isBust: (activePlayer.score > 0 && scoresThisRound.every(s => s === 0) && dartsThrownThisRound > 0),
+    
+    darts: scoresThisRound.map((s, i) => ({
+        value: Math.floor(s / (multipliersThisRound[i] || 1)), 
+        multiplier: multipliersThisRound[i] || 1,
+        isCheckoutAttempt: checkoutAttempts > i 
+    })),
 
+    dart1: Math.floor(scoresThisRound[0] / (multipliersThisRound[0] || 1)),
+    multiplier1: multipliersThisRound[0] || 1,
+    dart2: Math.floor(scoresThisRound[1] / (multipliersThisRound[1] || 1)),
+    multiplier2: multipliersThisRound[1] || 1,
+    dart3: Math.floor(scoresThisRound[2] / (multipliersThisRound[2] || 1)),
+    multiplier3: multipliersThisRound[2] || 1
+};
+
+    console.log("Envoi du TurnPayload:", turnPayload);
     await GameState.saveTurnToDatabase(turnPayload);
 
     saveRoundToTable();

@@ -8,14 +8,12 @@ datasource db {
   // url      = env("DATABASE_URL")
 }
 
-
-
 model Player {
   id        Int          @id @default(autoincrement())
   nickname  String       @unique
   createdAt DateTime     @default(now())
   games     GamePlayer[]
-  turns     Turn[]       
+  turns     Turn[]
 }
 
 model Game {
@@ -36,36 +34,50 @@ model Set {
 }
 
 model Leg {
-  id       Int      @id @default(autoincrement())
-  setId    Int
-  winnerId Int?
-  set      Set      @relation(fields: [setId], references: [id])
-  turns    Turn[]   
+  id            Int      @id @default(autoincrement())
+  setId         Int
+  winnerId      Int?
+  dartsToFinish Int?    
+  set           Set      @relation(fields: [setId], references: [id])
+  turns         Turn[]
 }
 
 model Turn {
-  id         Int      @id @default(autoincrement())
-  legId      Int
-  playerId   Int
+  id          Int      @id @default(autoincrement())
+  legId       Int
+  playerId    Int
   
-  // Détail des 3 fléchettes
-  dart1      Int      @default(0)
-  dart2      Int      @default(0)
-  dart3      Int      @default(0)
-  
-  // Multiplicateurs (1 = Simple, 2 = Double, 3 = Triple)
-  multiplier1 Int     @default(1)
-  multiplier2 Int     @default(1)
-  multiplier3 Int     @default(1)
+  dart1       Int      @default(0)
+  dart2       Int      @default(0)
+  dart3       Int      @default(0)
+  multiplier1 Int      @default(1)
+  multiplier2 Int      @default(1)
+  multiplier3 Int      @default(1)
 
-  points     Int      // Somme totale : (d1*m1) + (d2*m2) + (d3*m3)
-  remaining  Int?     // Score restant après la volée
-  isBust     Boolean  @default(false)
-
+  points      Int      
+  remaining   Int?     
+  isBust      Boolean  @default(false)
   dartsThrown Int      @default(3)
   
-  leg        Leg      @relation(fields: [legId], references: [id])
-  player     Player   @relation(fields: [playerId], references: [id])
+  createdAt   DateTime @default(now())
+
+  darts       Dart[]
+
+  leg         Leg      @relation(fields: [legId], references: [id])
+  player      Player   @relation(fields: [playerId], references: [id])
+
+  @@index([playerId, createdAt])
+}
+
+model Dart {
+  id                Int     @id @default(autoincrement())
+  turnId            Int
+  value             Int     
+  multiplier        Int     
+
+  isCheckoutAttempt Boolean @default(false) 
+
+  turn              Turn    @relation(fields: [turnId], references: [id], onDelete: Cascade)
 }
 
 model GamePlayer {
