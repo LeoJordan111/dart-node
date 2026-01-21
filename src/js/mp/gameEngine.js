@@ -16,14 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const startScore = parseInt(params.get('startScore')) || 501;
 
     const nbPlayers = parseInt(localStorage.getItem('nb_players')) || 1;
-    const playerNames = [];
+    const playerObjects = [];
+
     for (let i = 1; i <= nbPlayers; i++) {
         const name = localStorage.getItem(`player${i}_name`);
-        if (name) playerNames.push(name);
+        const id = parseInt(localStorage.getItem(`player${i}_id`));
+        
+        if (name && id) {
+            playerObjects.push({ id, name });
+        }
     }
 
     GameState.setupMatch(
-        playerNames,
+        playerObjects,
         parseInt(params.get('sets')) || 1,
         parseInt(params.get('legs')) || 3,
         mode,

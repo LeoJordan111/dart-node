@@ -13,15 +13,18 @@ export let state = {
 /**
  * INITIALISATION
  */
-export function setupMatch(playerNames, sets, legs, mode, startScore = 501) {
-    state.players = playerNames.map((name, index) => ({
-        id: index + 1,
-        name: name,
-        score: startScore,
-        sets: 0,
-        legs: 0,
-        stats: { totalDarts: 0, pointsScored: 0 }
-    }));
+export function setupMatch(playerObjects, sets, legs, mode, startScore = 501) {
+
+    state.players = playerObjects.map(function(p) {
+        return {
+            id: p.id,
+            name: p.name,
+            score: startScore,
+            sets: 0,
+            legs: 0,
+            stats: { totalDarts: 0, pointsScored: 0 }
+        };
+    });
 
     state.config.setsToWin = sets;
     state.config.legsPerSet = legs;
