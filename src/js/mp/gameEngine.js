@@ -44,6 +44,11 @@ function refreshView() {
 
     UI.refreshScoreBoard(activePlayer);
 
+    const activeDartsElem = document.getElementById('active-darts');
+    if (activeDartsElem) {
+        activeDartsElem.innerText = activePlayer.stats.totalDarts;
+    }
+
     const queueContainer = document.getElementById('players-queue');
     if (queueContainer) {
         queueContainer.innerHTML = '';

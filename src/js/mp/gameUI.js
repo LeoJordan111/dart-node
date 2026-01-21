@@ -6,10 +6,11 @@ export const UI = {
         activeName: document.getElementById('active-player-name'),
         activeSets: document.getElementById('active-sets'),
         activeLegs: document.getElementById('active-legs'),
+        activeDarts: document.getElementById('active-darts'),
         queueContainer: document.getElementById('players-queue'),
         scoreInputs: document.querySelectorAll('.score-input'),
         modal: document.getElementById('dartsModal'),
-        historyBody: document.getElementById('history-body')
+        historyBody: document.getElementById('history-body')    
     },
 
     initLayout: (mode) => {
@@ -26,6 +27,10 @@ export const UI = {
         if (UI.elements.activeName) UI.elements.activeName.textContent = activePlayer.name;
         if (UI.elements.activeSets) UI.elements.activeSets.textContent = activePlayer.sets;
         if (UI.elements.activeLegs) UI.elements.activeLegs.textContent = activePlayer.legs;
+
+        if (UI.elements.activeDarts) {
+        UI.elements.activeDarts.textContent = activePlayer.stats.totalDarts;
+        }
 
         if (UI.elements.queueContainer && GameState.state.players.length > 1) {
             UI.elements.queueContainer.innerHTML = ''; 

@@ -1,19 +1,24 @@
 /* --- VARIABLES --- */
 :root {
-  --dart-green: #4CAF50;
-  --dart-dark-green: #1e7e34;
-  --dart-bg-gray: #f0f0f0;
-  --dart-border: #333;
-  --dart-light-border: #999;
-  --primary: #4CAF50;
+    --dart-green: #4CAF50;
+    --dart-dark-green: #1e7e34;
+    --dart-bg-gray: #f0f0f0;
+    --dart-border: #333;
+    --dart-light-border: #999;
+    --primary: #4CAF50;
+    --gold: #f1c40f;
+    --text-waiting: rgba(255, 255, 255, 0.7);
 }
 
 /* --- MISE EN PAGE GLOBALE --- */
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
+    background-color: #000;
 }
 
 .game-container {
@@ -26,195 +31,160 @@ body {
     border: 2px solid black;
 }
 
-/* --- ZONE SCORE --- */
+/* --- ZONE SCORE PRINCIPALE (FOCUS) --- */
 .container-score {
     background-color: var(--dart-green);
     color: white;
     text-align: center;
     padding: 15px;
-}
-
-#main-score-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 10px 0;
-}
-
-#main-score {
-    font-size: 4rem !important;
-    font-weight: 900;
-    line-height: 1 !important;
-    font-family: 'Orbitron', sans-serif;
-}
-
-/* --- LAYOUTS (SOLO / PVP) --- */
-#score-layout-solo, #score-layout-pvp {
-    width: 100%;
-}
-
-/* --- LAYOUTS PVP --- */
-.match-meta-pvp {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 98%;
-    padding: 10px;
-    margin-left: 5px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    overflow: visible;
-}
-
-.player-info {
-    flex: 1;
     display: flex;
     flex-direction: column;
-}
-
-/* Alignements spécifiques par joueur */
-#p1-info { 
-    align-items: flex-start;
-    text-align: left; 
-}
-#p2-info { 
-    align-items: flex-end; 
-    text-align: right; 
-}
-
-/* LE NOM : l'ancre pour l'icône */
-.p-name { 
-    font-weight: bold; 
-    font-size: 1.1rem; 
-    color: #ccc;
-    position: relative;
-    display: inline-block;
-    transition: color 0.3s ease;
-}
-
-
-.starter-indicator { 
-    display: none !important; 
-}
-
-.player-info.is-starter .p-name::after {
-    content: "🎯"; 
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.9rem;
-    z-index: 10;
-}
-
-#p1-info.is-starter .p-name::after {
-    right: 104%;
-    margin-right: 8px;
-}
-
-#p2-info.is-starter .p-name::after {
-    left: 115%;
-    margin-left: 8px;
-}
-
-.player-info.is-starter .p-name {
-    color: white;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-}
-
-.p-stats { 
-    font-size: 0.9rem; 
-    opacity: 0.8; 
-}
-
-.p-current-score {
-    font-size: 1.8rem;
-    font-weight: 900;
-    margin-top: 2px;
-    font-family: 'Orbitron', sans-serif;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-/* État actif (celui qui est en train de lancer ses 3 fléchettes) */
-.player-info.active .p-name { 
-    color: white; 
-}
-
-.player-info.active .p-current-score {
-    color: yellow;
-    transform: scale(1.1);
-}
-
-#p1-info .p-current-score {
-    padding-left: 8px;
-}
-
-.vs-divider {
-    padding: 0 15px;
-    font-style: italic;
-    font-weight: bold;
-    color: white;
-}
-
-/* --- ZONE DES 3 FLÉCHETTES --- */
-.container-dart {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background-color: black;
-}
-
-.dart {
-    background-color: white;
-    padding: 10px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #333;
-}
-
-.score-input {
-    width: 70px;
-    height: 50px;
-    border: 2px dashed var(--dart-light-border);  
-    margin: 5px auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    color: var(--dart-green);
-    background: white;
-    border-radius: 8px;
-}
-
-.score-input.filled {
-    border: 2px solid var(--dart-green);
+    gap: 10px;
 }
 
 .score-comeback {
-    font-size: 0.8rem;
-    color: #666;
     cursor: pointer;
-    text-decoration: underline;
 }
 
-/* --- PAVÉ NUMÉRIQUE ET BOUTONS --- */
-.container-num, .container-multi, .container-option {
+#active-player-focus {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 4px solid var(--gold);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.focus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.active-stats-mini {
+    font-size: 0.9rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    color: var(--gold);
+}
+
+#active-player-name {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#main-score {
+    font-size: 4.5rem !important;
+    font-weight: 900;
+    font-family: 'Orbitron', sans-serif;
+    color: var(--gold);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    line-height: 1 !important;
+}
+
+/* --- FILE D'ATTENTE (AUTRES JOUEURS) --- */
+.players-queue {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.queue-card {
+    min-width: 110px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.queue-card .p-name {
+    color: var(--text-waiting) !important;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.queue-card .p-score {
+    color: var(--text-waiting) !important;
+    font-size: 1.3rem;
+    font-weight: bold;
+    display: block;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.queue-card .p-stats {
+    color: var(--text-waiting) !important;
+    font-size: 0.7rem;
+}
+
+/* --- INTERFACE DE JEU (TOUCHES) --- */
+.container-dart {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background-color: black;
+    gap: 1px;
+}
+
+.dart {
+    background: white;
+    padding: 10px;
+    text-align: center;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.score-input {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--dart-green);
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container-num {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1px;
     background-color: black;
 }
 
-.container-multi, .container-option { 
-    grid-template-columns: repeat(2, 1fr); 
+.container-multi {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background-color: black;
+}
+
+.container-option {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background-color: black;
 }
 
 .num {
-    background-color: #f0f0f0;
-    padding: 20px 0;
+    background-color: #f8f8f8;
+    padding-top: 20px;
+    padding-bottom: 20px;
     text-align: center;
     font-weight: bold;
     font-size: 1.4rem;
@@ -223,57 +193,71 @@ body {
     color: #333;
 }
 
-.num:active { 
-    background-color: #ccc;
+.num.bull {
+    grid-column: span 2;
 }
 
-.num.bull, .num.zero { 
-    grid-column: span 2; 
-    background-color: #e0e0e0; 
+.num.zero {
+    grid-column: span 2;
 }
 
-#double.active { 
+#double {
+    background-color: #f8f8f8;
+}
+
+#double.active {
     background-color: #f59e0b !important;
     color: white;
 }
-#triple.active { 
-    background-color: #ef4444 !important; 
-    color: white; 
+
+#triple {
+    background-color: #f8f8f8;
+}
+
+#triple.active {
+    background-color: #ef4444 !important;
+    color: white;
 }
 
 #validate-button {
     background-color: var(--dart-green);
     color: white;
-    padding: 20px;
-    font-weight: 800;
+    font-weight: bold;
     font-size: 1.5rem;
+    padding: 20px;
+    border: none;
+    cursor: pointer;
 }
 
-#btn-no-score { 
-    background-color: #666; 
-    color: white; 
+#btn-no-score {
+    background-color: #666;
+    color: white;
 }
 
-/* --- TABLEAU RÉSULTATS --- */
+/* --- HISTORIQUE --- */
 .container-result {
-    padding: 10px;
     background: white;
+    padding: 10px;
+    flex-grow: 1;
 }
 
 .result {
-    width: 100%; 
-    border-collapse: collapse; 
+    width: 100%;
+    border-collapse: collapse;
     text-align: center;
-    color: #333;
 }
 
-.result th, .result td {
-    border: 1px solid var(--dart-light-border); 
+.result th {
+    border: 1px solid #ddd;
     padding: 8px;
+    font-size: 0.8rem;
+    background-color: var(--dart-bg-gray);
 }
 
-.result thead { 
-    background-color: var(--dart-bg-gray); 
+.result td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    font-size: 0.8rem;
 }
 
 /* --- MODALES ET OVERLAYS --- */

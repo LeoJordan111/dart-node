@@ -37,11 +37,12 @@ export function getActivePlayer() {
     return state.players[state.currentPlayerIndex];
 }
 
-export function updatePlayerScore(points) {
+export function updatePlayerScore(points, dartsCount = 1) {
     const player = getActivePlayer();
     if (player) {
         player.score -= points;
         player.stats.pointsScored += points;
+        //player.stats.totalDarts += dartsCount;
     }
 }
 
@@ -75,7 +76,10 @@ export function winLeg(player) {
 }
 
 export function resetScoresForNewLeg(startScore = 501) {
-    state.players.forEach(p => p.score = startScore);
+    state.players.forEach(p => {
+        p.score = startScore;
+        p.stats.totalDarts = 0;
+    });
     state.currentPlayerIndex = 0;
     state.roundNumber = 1;
 }
