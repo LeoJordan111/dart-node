@@ -223,6 +223,17 @@ tr:hover td {
     font-weight: bold;
 }
 
+/* Détail des nums */
+.row-num-main {
+    background-color: #f8f9fa; 
+}
+
+.row-num-sub td:first-child {
+    padding-left: 25px; 
+    font-size: 0.85rem;
+    color: #6c757d;    
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .stats-header h1 {

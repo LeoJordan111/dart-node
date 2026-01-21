@@ -41,12 +41,13 @@ async function refreshStats(nickname) {
         fetchPerformance(encodedNick),      
         fetchCheckouts(encodedNick),        
         fetchLegRecords(encodedNick),       
-        fetchScoreDistribution(encodedNick)
+        fetchScoreDistribution(encodedNick),
+        fetchPrecision(encodedNick)
     ]);
 }
 
 async function fetchGlobalCards(nick) {
-    const res = await fetch(`/api/games/stats/global?nickname=${nick}`);
+    const res = await fetch(`/api/stats/global?nickname=${nick}`);
     const data = await res.json();
     if (data) {
         document.getElementById('global-avg').innerText = data.globalAverage || "0.00";
@@ -69,7 +70,7 @@ function updateTableHeader(daysData) {
 }
 
 async function fetchPerformance(nick) {
-    const res = await fetch(`/api/games/stats/last-days?nickname=${nick}&days=3`);
+    const res = await fetch(`/api/stats/last-days?nickname=${nick}&days=3`);
     const data = await res.json();
     while (data.length < 3) data.push({ date: null });
     
@@ -79,16 +80,16 @@ async function fetchPerformance(nick) {
 }
 
 async function fetchCheckouts(nick) {
-    const res = await fetch(`/api/games/stats/checkouts?nickname=${nick}&days=3`);
+    const res = await fetch(`/api/stats/checkouts?nickname=${nick}&days=3`);
     const data = await res.json();
     if (!data) return;
     while (data.length < 3) data.push({ date: null });
-    const indicators = ['checkout-rate', 'checkout-ratio', 'checkout-avg', 'checkout-max'];
+    const indicators = ['checkout-rate', 'checkout-ratio', 'checkout-darts-avg', 'checkout-points-avg', 'checkout-max'];
     indicators.forEach(ind => updatePerfRowMultiColumns(ind, data));
 }
 
 async function fetchLegRecords(nick) {
-    const res = await fetch(`/api/games/stats/legs?nickname=${nick}&days=3`);
+    const res = await fetch(`/api/stats/legs?nickname=${nick}&days=3`);
     const data = await res.json();
     while (data.length < 3) data.push({ date: null });
     const indicators = ['leg-best', 'leg-best-avg', 'leg-hightscore'];
@@ -96,7 +97,7 @@ async function fetchLegRecords(nick) {
 }
 
 async function fetchScoreDistribution(nick) {
-    const res = await fetch(`/api/games/stats/distribution?nickname=${nick}&days=3`);
+    const res = await fetch(`/api/stats/distribution?nickname=${nick}&days=3`);
     const data = await res.json();
     while (data.length < 3) data.push({ date: null });
 
@@ -111,6 +112,22 @@ async function fetchScoreDistribution(nick) {
     allIndicators.forEach(ind => {
         updatePerfRowMultiColumns(ind, data);
     });
+}
+
+async function fetchPrecision(nick) {
+    const res = await fetch(`/api/stats/precision?nickname=${nick}&days=3`);
+    const data = await res.json();
+    if (!data) return;
+
+    while (data.length < 3) data.push({ date: null });
+
+    const indicators = [];
+    for (let i = 1; i <= 20; i++) {
+        indicators.push(`num-${i}-total`, `num-${i}-s`, `num-${i}-d`, `num-${i}-t`);
+    }
+    indicators.push('num-bull-total', 'num-bull-s', 'num-bull-d');
+
+    indicators.forEach(ind => updatePerfRowMultiColumns(ind, data));
 }
 
 function updatePerfRowMultiColumns(indicator, daysData) {

@@ -44,6 +44,9 @@ app.use('/api/players', playerRoutes);
 const gameRoutes = require('./routes/game.routes');
 app.use('/api/games', gameRoutes);
 
+const statsRoutes = require('./routes/stats.routes');
+app.use('/api/stats', statsRoutes);
+
 // 5. LANCEMENT
 app.listen(PORT, () => {
     console.log(`Serveur lancé sur http://localhost:${PORT}`);

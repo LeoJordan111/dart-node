@@ -193,7 +193,8 @@ const getCheckoutStats = async (req, res) => {
                     date: dateKey, 
                     checkouts: 0, 
                     attempts: 0, 
-                    maxCheckout: 0 
+                    maxCheckout: 0,
+                    sumCheckoutPoints: 0 
                 };
             }
 
@@ -202,6 +203,7 @@ const getCheckoutStats = async (req, res) => {
 
             if (turn.remaining === 0 && !turn.isBust) {
                 groupedByDate[dateKey].checkouts += 1;
+                groupedByDate[dateKey].sumCheckoutPoints += turn.points;
                 if (turn.points > groupedByDate[dateKey].maxCheckout) {
                     groupedByDate[dateKey].maxCheckout = turn.points;
                 }
@@ -216,7 +218,8 @@ const getCheckoutStats = async (req, res) => {
             date: d.date,
             "checkout-rate": d.attempts > 0 ? Math.round((d.checkouts / d.attempts) * 100) : 0,
             "checkout-ratio": `${d.checkouts}/${d.attempts}`,
-            "checkout-avg": d.checkouts > 0 ? (d.attempts / d.checkouts).toFixed(1) : "-",
+            "checkout-darts-avg": d.checkouts > 0 ? (d.attempts / d.checkouts).toFixed(1) : "-",
+            "checkout-points-avg": d.checkouts > 0 ? (d.sumCheckoutPoints / d.checkouts).toFixed(1) : "-",
             "checkout-max": d.maxCheckout || "-"
         })));
     } catch (error) {
@@ -373,11 +376,76 @@ const getScoreDistribution = async (req, res) => {
     }
 };
 
+/**
+ * REQUÊTE : PRÉCISION PAR NUMÉRO
+ */
+const getPrecisionStats = async (req, res) => {
+    try {
+        const { nickname, days = 3 } = req.query;
+
+        const turns = await prisma.turn.findMany({
+            where: { player: { nickname: nickname } },
+            orderBy: { id: 'desc' },
+            include: { 
+                leg: { include: { set: { include: { game: true } } } },
+                darts: true 
+            }
+        });
+
+        const groupedByDate = {};
+
+        turns.forEach(turn => {
+            const dateKey = new Date(turn.leg.set.game.createdAt).toISOString().split('T')[0];
+            
+            if (!groupedByDate[dateKey]) {
+                groupedByDate[dateKey] = { date: dateKey };
+
+                for (let i = 1; i <= 20; i++) {
+                    groupedByDate[dateKey][`num-${i}-s`] = 0;
+                    groupedByDate[dateKey][`num-${i}-d`] = 0;
+                    groupedByDate[dateKey][`num-${i}-t`] = 0;
+                    groupedByDate[dateKey][`num-${i}-total`] = 0;
+                }
+                groupedByDate[dateKey][`num-bull-s`] = 0; 
+                groupedByDate[dateKey][`num-bull-d`] = 0; 
+                groupedByDate[dateKey][`num-bull-total`] = 0;
+            }
+
+            const day = groupedByDate[dateKey];
+
+            turn.darts.forEach(dart => {
+                const val = dart.value;
+                const mult = dart.multiplier;
+
+                if (val === 25) {
+                    if (mult === 1) day[`num-bull-s`]++;
+                    if (mult === 2) day[`num-bull-d`]++;
+                    day[`num-bull-total`]++;
+                } else if (val >= 1 && val <= 20) {
+                    if (mult === 1) day[`num-${val}-s`]++;
+                    else if (mult === 2) day[`num-${val}-d`]++;
+                    else if (mult === 3) day[`num-${val}-t`]++;
+                    day[`num-${val}-total`]++;
+                }
+            });
+        });
+
+        const sortedDays = Object.values(groupedByDate)
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, parseInt(days));
+
+        res.json(sortedDays);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = { 
     getGlobalStats, 
     getLastGameDetails, 
     getLastDaysStats, 
     getCheckoutStats,
     getLegStats,
-    getScoreDistribution
+    getScoreDistribution,
+    getPrecisionStats
 };
