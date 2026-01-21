@@ -1,13 +1,37 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+
+    await loadPlayersList();
+
     const params = new URLSearchParams(window.location.search);
     const nickname = params.get('nickname');
 
     if (nickname) {
+        const select = document.getElementById('player-stats-select');
+        select.value = nickname;
         refreshStats(nickname);
     } else {
         document.getElementById('stats-title').innerText = "Sélectionnez un joueur";
     }
 });
+
+async function loadPlayersList() {
+    try {
+        const res = await fetch('/api/players');
+        const players = await res.json();
+        const select = document.getElementById('player-stats-select');
+        
+        select.innerHTML = '<option value="">-- Choisir un joueur --</option>';
+        
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.nickname; 
+            option.textContent = player.nickname;
+            select.appendChild(option);
+        });
+    } catch (err) {
+        console.error("Erreur lors de la récupération des joueurs:", err);
+    }
+}
 
 async function refreshStats(nickname) {
     const encodedNick = encodeURIComponent(nickname);
@@ -134,4 +158,17 @@ function renderHistory(turns) {
             <td>${t.isBust ? '❌' : '✅'}</td>
         </tr>
     `).join('');
+}
+
+function changePlayer(nickname) {
+    if (!nickname) {
+        document.getElementById('stats-title').innerText = "Sélectionnez un joueur";
+        return;
+    }
+
+    document.getElementById('stats-title').innerText = `Stats de ${nickname}`;
+    const newUrl = `${window.location.pathname}?nickname=${encodeURIComponent(nickname)}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+
+    refreshStats(nickname);
 }
