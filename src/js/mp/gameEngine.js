@@ -124,7 +124,11 @@ function bindEvents() {
             refreshView();
 
             if (player.score === 0) {
-                setTimeout(() => UI.openModal(true), 300);
+                if (player.checkoutMode === 'single') {
+                    setTimeout(() => finishLeg(player, 0), 300);
+                } else {
+                    setTimeout(() => UI.openModal(true), 300);
+                }
             }
         });
     });
@@ -138,43 +142,29 @@ function bindEvents() {
         const player = GameState.getActivePlayer();
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         
-        if ((player.score + totalRound) <= 170 && player.score !== 0) {
-            UI.openModal(false);
-        } else if (player.score === 0) {
-            UI.openModal(true);
-        } else {
-            completeTurn(0); 
+        if (player.checkoutMode === 'double') {
+            if ((player.score + totalRound) <= 170 && player.score !== 0) {
+                UI.openModal(false);
+                return;
+            } else if (player.score === 0) {
+                UI.openModal(true);
+                return;
+            }
         }
+
+        finishLeg(player, 0);
     });
 
     document.getElementById('dartsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const formData = new FormData(e.target);
         const attempts = parseInt(formData.get('checkoutDouble')) || 0;
+        
         UI.closeModal();
         
         const player = GameState.getActivePlayer();
-        const params = new URLSearchParams(window.location.search);
-        const gameId = params.get('id');
-
-        await completeTurn(attempts);
-
-        if (player.score === 0) {
-            const result = GameState.winLeg(player);
-
-            await fetch(`/api/games/${gameId}/finish-leg`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ winnerId: player.id })
-            });
-
-            if (result === "MATCH_OVER") {
-                handleMatchWin(player);
-            } else {
-                GameState.resetScoresForNewLeg(parseInt(params.get('startScore')) || 501);
-                refreshView();
-            }
-        }
+        await finishLeg(player, attempts);
     });
 
     document.getElementById('btn-no-score').addEventListener('click', () => {
@@ -286,4 +276,29 @@ function handleMatchWin(winner) {
     const avg = (winner.stats.pointsScored / (winner.stats.totalDarts || 1) * 3).toFixed(2);
     document.getElementById('stat-avg').textContent = avg;
     overlay.style.display = 'flex';
+}
+
+async function finishLeg(player, attempts = 0) {
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('id');
+
+    await completeTurn(attempts);
+
+    if (player.score === 0) {
+        const result = GameState.winLeg(player);
+
+        await fetch(`/api/games/${gameId}/finish-leg`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ winnerId: player.id })
+        });
+
+        if (result === "MATCH_OVER") {
+            handleMatchWin(player);
+        } else {
+            const nextScore = parseInt(params.get('startScore')) || 501;
+            GameState.resetScoresForNewLeg(nextScore);
+            refreshView();
+        }
+    }
 }
