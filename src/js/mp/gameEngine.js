@@ -21,9 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     for (let i = 1; i <= nbPlayers; i++) {
         const name = localStorage.getItem(`player${i}_name`);
         const id = parseInt(localStorage.getItem(`player${i}_id`));
+        const checkout = localStorage.getItem(`player${i}_checkout`) || 'double';
         
         if (name && id) {
-            playerObjects.push({ id, name });
+            playerObjects.push({ 
+                id, 
+                name, 
+                checkoutMode: checkout 
+            });
         }
     }
 
@@ -87,8 +92,19 @@ function bindEvents() {
             const points = val * currentMultiplier;
             const player = GameState.getActivePlayer();
             const potentialScore = player.score - points;
+            
+            const playerMode = player.checkoutMode || 'double';
 
-            if (potentialScore < 0 || potentialScore === 1) {
+            let isBust = false;
+            if (potentialScore < 0) {
+                isBust = true;
+            } else if (potentialScore === 1 && playerMode === 'double') {
+                isBust = true;
+            } else if (potentialScore === 0 && playerMode === 'double' && currentMultiplier !== 2) {
+                isBust = true;
+            }
+            
+            if (isBust) {
                 multipliersThisRound[dartsThrownThisRound] = currentMultiplier;
                 processDart(points);
                 

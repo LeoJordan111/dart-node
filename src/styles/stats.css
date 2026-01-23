@@ -234,10 +234,6 @@ tr:hover td {
     color: #6c757d;    
 }
 
-#settings-x01 {
-    transition: all 0.3s ease;
-}
-
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .stats-header h1 {

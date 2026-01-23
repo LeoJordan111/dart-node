@@ -331,3 +331,24 @@ select:focus, input:focus {
 .stats-selector-card {
     cursor: default;
 }
+
+#settings-x01 {
+    transition: all 0.3s ease;
+}
+
+.player-selection-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.checkout-selector {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 0.9em;
+}

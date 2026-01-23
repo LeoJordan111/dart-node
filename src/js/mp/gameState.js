@@ -14,12 +14,12 @@ export let state = {
  * INITIALISATION
  */
 export function setupMatch(playerObjects, sets, legs, mode, startScore = 501) {
-
-    state.players = playerObjects.map(function(p) {
+    state.players = playerObjects.map(function(p, index) {
         return {
             id: p.id,
             name: p.name,
             score: startScore,
+            checkoutMode: p.checkoutMode || localStorage.getItem(`player${index + 1}_checkout`) || 'double',
             sets: 0,
             legs: 0,
             stats: { totalDarts: 0, pointsScored: 0 }
@@ -45,7 +45,6 @@ export function updatePlayerScore(points, dartsCount = 1) {
     if (player) {
         player.score -= points;
         player.stats.pointsScored += points;
-        //player.stats.totalDarts += dartsCount;
     }
 }
 

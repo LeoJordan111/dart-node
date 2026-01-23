@@ -13,21 +13,29 @@ export const gameState = {
 async function loadPlayers() {
     try {
         const response = await fetch('/api/players');
-        if (!response.ok) throw new Error("Erreur réseau");
-        
         const players = await response.json();
         const container = document.getElementById('player-checkboxes');
-        
         if (!container) return;
 
         container.innerHTML = players.map(p => `
-            <label class="player-option">
-                <input type="checkbox" name="players" value="${p.id}" data-nickname="${p.nickname}">
-                <span>${p.nickname}</span>
-            </label>
+            <div class="player-card" id="card-${p.id}">
+                <label class="player-main-info">
+                    <input type="checkbox" name="players" value="${p.id}" data-nickname="${p.nickname}" onchange="updateCardStyle(${p.id})">
+                    <div class="player-details">
+                        <span class="player-name">${p.nickname}</span>
+                        <span class="player-status">Cliquer pour sélectionner</span>
+                    </div>
+                </label>
+                
+                <div class="checkout-option">
+                    <label>Sortie :</label>
+                    <select class="checkout-selector" data-player-id="${p.id}">
+                        <option value="double">DOUBLE OUT</option>
+                        <option value="single">SIMPLE OUT</option>
+                    </select>
+                </div>
+            </div>
         `).join('');
-        
-        console.log(`${players.length} joueurs chargés.`);
     } catch (err) {
         console.error("Erreur chargement joueurs:", err);
     }
@@ -51,7 +59,14 @@ async function validateAndStart() {
             setsToWin: sets,
             legsPerSet: legs
         },
-        playerIds: checkedInputs.map(input => parseInt(input.value))
+        playerIds: checkedInputs.map(input => parseInt(input.value)),
+        playerSettings: checkedInputs.map(input => {
+            const select = document.querySelector(`.checkout-selector[data-player-id="${input.value}"]`);
+            return {
+                id: parseInt(input.value),
+                checkoutMode: select ? select.value : 'double'
+            };
+        })
     };
 
     localStorage.clear();
@@ -61,8 +76,15 @@ async function validateAndStart() {
     localStorage.setItem('game_legs', payload.config.legsPerSet); 
     
     checkedInputs.forEach((input, index) => {
-        localStorage.setItem(`player${index + 1}_name`, input.getAttribute('data-nickname'));
-        localStorage.setItem(`player${index + 1}_id`, input.value);
+        const playerId = input.value;
+        const playerNum = index + 1;
+        const nickname = input.getAttribute('data-nickname');
+        const select = document.querySelector(`.checkout-selector[data-player-id="${playerId}"]`);
+        const checkoutMode = select ? select.value : 'double';
+
+        localStorage.setItem(`player${playerNum}_name`, nickname);
+        localStorage.setItem(`player${playerNum}_id`, playerId);
+        localStorage.setItem(`player${playerNum}_checkout`, checkoutMode); 
     });
 
     try {
@@ -86,6 +108,8 @@ async function validateAndStart() {
 
             const targetPage = isNaN(gameType) ? '/gameSpecial' : '/gameMulti';
             window.location.href = `${targetPage}?${queryParams.toString()}`;
+        } else {
+            alert("Erreur serveur lors de la création.");
         }
     } catch (err) {
         console.error("Erreur création partie:", err);
@@ -134,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateVisibility() {
         if (!gameTypeSelect || !x01Settings) return;
-        
         const val = gameTypeSelect.value;
         x01Settings.style.display = !isNaN(val) ? 'flex' : 'none';
     }
@@ -144,6 +167,22 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVisibility(); 
     }
 });
+
+window.updateCardStyle = function(playerId) {
+    const card = document.getElementById(`card-${playerId}`);
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    const statusText = card.querySelector('.player-status');
+    
+    if (checkbox.checked) {
+        card.classList.add('selected');
+        statusText.innerText = "Joueur sélectionné";
+        statusText.style.color = "var(--primary)";
+    } else {
+        card.classList.remove('selected');
+        statusText.innerText = "Cliquer pour sélectionner";
+        statusText.style.color = "var(--text-muted)";
+    }
+}
 
 window.validateAndStart = validateAndStart;
 window.toggleQuickAdd = toggleQuickAdd;
