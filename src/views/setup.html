@@ -13,31 +13,30 @@
 
         <div class="setup-section">
             <div class="form-group">
-                <label>Points de départ</label>
+                <label for="game-type">Type de jeu</label>
                 <select id="game-type">
-                    <option value="301">301</option>
-                    <option value="401">401</option>
-                    <option value="501" selected>501</option>
-                    <option value="601">601</option>
-                    <option value="701">701</option>
-                    <option value="801">801</option>
-                    <option value="901">901</option>
-                    <option value="1001">1001</option>
+                    <optgroup label="Classique (X01)">
+                        <option value="301">301</option>
+                        <option value="501" selected>501</option>
+                    </optgroup>
+                    <optgroup label="Spécial">
+                        <option value="cricket">Cricket</option>
+                        <option value="atc">Tour du monde</option>
+                    </optgroup>
                 </select>
             </div>
 
-            <div class="form-row">
+            <div id="settings-x01" class="form-row">
                 <div class="form-group">
-                    <label>Sets gagnants</label>
+                    <label for="sets-to-win">Sets gagnants</label>
                     <select id="sets-to-win">
                         <option value="1">1</option>
                         <option value="3">3</option>
                         <option value="5">5</option>
-                        <option value="7">7</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Legs par Set</label>
+                    <label for="legs-per-set">Legs par Set</label>
                     <select id="legs-per-set">
                         <option value="1">1</option>
                         <option value="3" selected>3</option>
@@ -55,22 +54,12 @@
                 <button type="button" class="btn-add-quick" onclick="toggleQuickAdd()">+ Nouveau</button>
             </div>
 
-            <div id="quick-add-player" class="quick-add-panel">
+            <div id="quick-add-player" class="quick-add-panel" style="display: none;">
                 <input type="text" id="quick-nickname" placeholder="Pseudo du nouveau joueur...">
                 <button class="btn-save-quick" onclick="addPlayerQuick()">Enregistrer</button>
             </div>
 
-            <!-- <div class="setup-group">
-                <label for="nb-players">Nombre de joueurs :</label>
-                <select id="nb-players" onchange="updatePlayerInputs(this.value)">
-                    <option value="1">1 joueur</option>
-                    <option value="2">2 Joueurs</option>
-                    <option value="3">3 Joueurs</option>
-                    <option value="4">4 Joueurs</option>
-                </select>
-            </div> -->
-
-            <p id="instruction" class="field-info">Choisissez les joueurs pour commencer.</p>
+            <p id="instruction" class="field-info">Sélectionnez les participants.</p>
             
             <div id="player-checkboxes" class="player-grid">
                 </div>

@@ -1,4 +1,4 @@
-/* --- ÉTAT DU JEU (PRÊT POUR LE MULTI) --- */
+/* --- ÉTAT DU JEU --- */
 export const gameState = {
     players: [],
     currentPlayerIndex: 0,
@@ -6,14 +6,6 @@ export const gameState = {
     isGameOver: false,
     history: []
 };
-
-/* --- LOGIQUE SOLO --- */
-/*
-const soloConfig = {
-    isSolo: true,
-    active: false
-};
-*/
 
 /**
  * 1. CHARGEMENT DES JOUEURS DEPUIS LA BD
@@ -46,39 +38,32 @@ async function loadPlayers() {
  */
 async function validateAndStart() {
     const checkedInputs = Array.from(document.querySelectorAll('input[name="players"]:checked'));
-    const nbPlayers = checkedInputs.length;
+    if (checkedInputs.length === 0) return alert("Veuillez sélectionner au moins un joueur.");
 
-    if (nbPlayers === 0) {
-        return alert("Veuillez sélectionner au moins un joueur.");
-    }
+    const gameType = document.getElementById('game-type').value;
+    const sets = parseInt(document.getElementById('sets-to-win')?.value) || 1;
+    const legs = parseInt(document.getElementById('legs-per-set')?.value) || 3;
 
-    // --- NETTOYAGE PROPRE DU LOCALSTORAGE ---
-    localStorage.clear(); 
-    
-    localStorage.setItem('nb_players', nbPlayers);
+    const payload = {
+        gameMode: gameType,
+        config: {
+            startScore: isNaN(gameType) ? 0 : parseInt(gameType), 
+            setsToWin: sets,
+            legsPerSet: legs
+        },
+        playerIds: checkedInputs.map(input => parseInt(input.value))
+    };
+
+    localStorage.clear();
+    localStorage.setItem('nb_players', checkedInputs.length);
+    localStorage.setItem('game_mode', payload.gameMode);
+    localStorage.setItem('game_sets', payload.config.setsToWin); 
+    localStorage.setItem('game_legs', payload.config.legsPerSet); 
     
     checkedInputs.forEach((input, index) => {
         localStorage.setItem(`player${index + 1}_name`, input.getAttribute('data-nickname'));
         localStorage.setItem(`player${index + 1}_id`, input.value);
     });
-
-    // --- RÉCUPÉRATION PRÉCISE DES PARAMÈTRES ---
-    const gameType = document.getElementById('game-type').value;
-    const setsInput = document.getElementById('sets-to-win').value;
-    const legsInput = document.getElementById('legs-per-set').value;
-
-    const payload = {
-        type: gameType,
-        setsToWin: setsInput ? parseInt(setsInput) : 1,
-        legsPerSet: legsInput ? parseInt(legsInput) : 3,
-        playerIds: checkedInputs.map(input => parseInt(input.value)),
-        mode: 'multi'
-    };
-
-    localStorage.setItem('game_sets', payload.setsToWin);
-    localStorage.setItem('game_legs', payload.legsPerSet);
-
-    console.log("Envoi du payload:", payload);
 
     try {
         const res = await fetch('/api/games/create', {
@@ -93,25 +78,27 @@ async function validateAndStart() {
             const queryParams = new URLSearchParams({
                 id: game.id,
                 legId: game.firstLegId || 0,
-                startScore: payload.type,
-                sets: payload.setsToWin,
-                legs: payload.legsPerSet
+                mode: payload.gameMode,
+                startScore: payload.config.startScore,
+                sets: payload.config.setsToWin,
+                legs: payload.config.legsPerSet
             });
 
-            window.location.href = `/gameMulti?${queryParams.toString()}`;
+            const targetPage = isNaN(gameType) ? '/gameSpecial' : '/gameMulti';
+            window.location.href = `${targetPage}?${queryParams.toString()}`;
         }
-    } catch (err) { 
-        console.error("Erreur création partie:", err); 
+    } catch (err) {
+        console.error("Erreur création partie:", err);
     }
 }
 
 /**
- * 3. GESTION DE L'INTERFACE ET EXPOSITION MONDIALE
+ * 3. GESTION DE L'INTERFACE
  */
 function toggleQuickAdd() {
     const form = document.getElementById('quick-add-player');
     if (form) {
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
     }
 }
 
@@ -136,7 +123,27 @@ async function addPlayerQuick() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadPlayers);
+/**
+ * ÉVÉNEMENTS DOM
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    loadPlayers();
+
+    const gameTypeSelect = document.getElementById('game-type');
+    const x01Settings = document.getElementById('settings-x01');
+
+    function updateVisibility() {
+        if (!gameTypeSelect || !x01Settings) return;
+        
+        const val = gameTypeSelect.value;
+        x01Settings.style.display = !isNaN(val) ? 'flex' : 'none';
+    }
+
+    if (gameTypeSelect) {
+        gameTypeSelect.addEventListener('change', updateVisibility);
+        updateVisibility(); 
+    }
+});
 
 window.validateAndStart = validateAndStart;
 window.toggleQuickAdd = toggleQuickAdd;
