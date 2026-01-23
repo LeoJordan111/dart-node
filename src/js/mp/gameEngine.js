@@ -108,7 +108,6 @@ function bindEvents() {
             refreshView();
 
             if (player.score === 0) {
-                saveRoundToTable();
                 setTimeout(() => UI.openModal(true), 300);
             }
         });
@@ -124,7 +123,6 @@ function bindEvents() {
         const totalRound = scoresThisRound.reduce((a, b) => a + b, 0);
         
         if ((player.score + totalRound) <= 170 && player.score !== 0) {
-            saveRoundToTable(); 
             UI.openModal(false);
         } else if (player.score === 0) {
             UI.openModal(true);
