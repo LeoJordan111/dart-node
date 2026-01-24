@@ -23,12 +23,9 @@ async function loadPlayers() {
                     <input type="checkbox" name="players" value="${p.id}" data-nickname="${p.nickname}" onchange="updateCardStyle(${p.id})">
                     <div class="player-details">
                         <span class="player-name">${p.nickname}</span>
-                        <span class="player-status">Cliquer pour sélectionner</span>
                     </div>
                 </label>
-                
                 <div class="checkout-option">
-                    <label>Sortie :</label>
                     <select class="checkout-selector" data-player-id="${p.id}">
                         <option value="double">DOUBLE OUT</option>
                         <option value="single">SIMPLE OUT</option>
@@ -167,22 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVisibility(); 
     }
 });
-
-window.updateCardStyle = function(playerId) {
-    const card = document.getElementById(`card-${playerId}`);
-    const checkbox = card.querySelector('input[type="checkbox"]');
-    const statusText = card.querySelector('.player-status');
-    
-    if (checkbox.checked) {
-        card.classList.add('selected');
-        statusText.innerText = "Joueur sélectionné";
-        statusText.style.color = "var(--primary)";
-    } else {
-        card.classList.remove('selected');
-        statusText.innerText = "Cliquer pour sélectionner";
-        statusText.style.color = "var(--text-muted)";
-    }
-}
 
 window.validateAndStart = validateAndStart;
 window.toggleQuickAdd = toggleQuickAdd;
