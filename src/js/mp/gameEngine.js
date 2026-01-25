@@ -11,9 +11,18 @@ let multipliersThisRound = [1, 1, 1];
  * INITIALISATION AU CHARGEMENT
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') || 'multi';
-    const startScore = parseInt(params.get('startScore')) || 501;
+    const gameId = sessionStorage.getItem('currentGameId');
+    const legId = sessionStorage.getItem('currentLegId');
+    const mode = sessionStorage.getItem('gameMode') || 'multi';
+    const startScore = parseInt(sessionStorage.getItem('startScore')) || 501;
+    const sets = parseInt(sessionStorage.getItem('sets')) || 1;
+    const legs = parseInt(sessionStorage.getItem('legs')) || 3;
+
+    if (!gameId || !legId) {
+        console.warn("Aucune session de jeu trouvée. Redirection...");
+        window.location.href = '/';
+        return;
+    }
 
     const nbPlayers = parseInt(localStorage.getItem('nb_players')) || 1;
     const playerObjects = [];
@@ -32,10 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 3. SETUP DU MATCH
     GameState.setupMatch(
         playerObjects,
-        parseInt(params.get('sets')) || 1,
-        parseInt(params.get('legs')) || 3,
+        sets, 
+        legs,
         mode,
         startScore
     );
@@ -67,6 +77,7 @@ function refreshView() {
                 const isNext = index === (GameState.state.currentPlayerIndex + 1) % allPlayers.length;
                 const card = document.createElement('div');
                 card.className = `queue-card ${isNext ? 'next' : ''}`;
+                
                 card.innerHTML = `
                     <span class="p-name">${player.name}</span>
                     <span class="p-score">${player.score}</span>
@@ -92,7 +103,6 @@ function bindEvents() {
             const points = val * currentMultiplier;
             const player = GameState.getActivePlayer();
             const potentialScore = player.score - points;
-            
             const playerMode = player.checkoutMode || 'double';
 
             let isBust = false;
@@ -151,18 +161,14 @@ function bindEvents() {
                 return;
             }
         }
-
         finishLeg(player, 0);
     });
 
     document.getElementById('dartsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const formData = new FormData(e.target);
         const attempts = parseInt(formData.get('checkoutDouble')) || 0;
-        
         UI.closeModal();
-        
         const player = GameState.getActivePlayer();
         await finishLeg(player, attempts);
     });
@@ -199,12 +205,11 @@ function processDart(points) {
 }
 
 /**
- * LOGIQUE DE JEU - SAUVEGARDE
+ * LOGIQUE DE JEU - SAUVEGARDE DU TOUR
  */
 async function completeTurn(checkoutAttempts = 0) {
     const activePlayer = GameState.getActivePlayer();
-    const params = new URLSearchParams(window.location.search);
-    const currentLegId = params.get('legId'); 
+    const currentLegId = sessionStorage.getItem('currentLegId');
 
     const turnPayload = {
         legId: parseInt(currentLegId),
@@ -228,7 +233,6 @@ async function completeTurn(checkoutAttempts = 0) {
         multiplier3: multipliersThisRound[2] || 1
     };
 
-    console.log("Envoi du TurnPayload:", turnPayload);
     await GameState.saveTurnToDatabase(turnPayload);
 
     saveRoundToTable();
@@ -236,6 +240,35 @@ async function completeTurn(checkoutAttempts = 0) {
     GameState.nextTurn();
     refreshView();
 }
+
+/**
+ * FIN DU LEG OU DU MATCH
+ */
+async function finishLeg(player, attempts = 0) {
+    const gameId = sessionStorage.getItem('currentGameId');
+    const startScore = parseInt(sessionStorage.getItem('startScore')) || 501;
+
+    await completeTurn(attempts);
+
+    if (player.score === 0) {
+        const result = GameState.winLeg(player);
+
+        await fetch(`/api/games/${gameId}/finish-leg`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ winnerId: player.id })
+        });
+
+        if (result === "MATCH_OVER") {
+            handleMatchWin(player);
+        } else {
+            GameState.resetScoresForNewLeg(startScore);
+            refreshView();
+        }
+    }
+}
+
+// --- FONCTIONS UTILITAIRES ---
 
 function saveRoundToTable() {
     const player = GameState.getActivePlayer();
@@ -276,29 +309,4 @@ function handleMatchWin(winner) {
     const avg = (winner.stats.pointsScored / (winner.stats.totalDarts || 1) * 3).toFixed(2);
     document.getElementById('stat-avg').textContent = avg;
     overlay.style.display = 'flex';
-}
-
-async function finishLeg(player, attempts = 0) {
-    const params = new URLSearchParams(window.location.search);
-    const gameId = params.get('id');
-
-    await completeTurn(attempts);
-
-    if (player.score === 0) {
-        const result = GameState.winLeg(player);
-
-        await fetch(`/api/games/${gameId}/finish-leg`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ winnerId: player.id })
-        });
-
-        if (result === "MATCH_OVER") {
-            handleMatchWin(player);
-        } else {
-            const nextScore = parseInt(params.get('startScore')) || 501;
-            GameState.resetScoresForNewLeg(nextScore);
-            refreshView();
-        }
-    }
 }

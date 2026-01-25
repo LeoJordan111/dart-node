@@ -94,17 +94,16 @@ async function validateAndStart() {
         if (res.ok) {
             const game = await res.json();
             
-            const queryParams = new URLSearchParams({
-                id: game.id,
-                legId: game.firstLegId || 0,
-                mode: payload.gameMode,
-                startScore: payload.config.startScore,
-                sets: payload.config.setsToWin,
-                legs: payload.config.legsPerSet
-            });
+            sessionStorage.setItem('currentGameId', game.id);
+            sessionStorage.setItem('currentLegId', game.firstLegId || 0);
+            sessionStorage.setItem('gameMode', payload.gameMode);
+            sessionStorage.setItem('startScore', payload.config.startScore);
+            sessionStorage.setItem('sets', payload.config.setsToWin);
+            sessionStorage.setItem('legs', payload.config.legsPerSet);
 
             const targetPage = isNaN(gameType) ? '/gameSpecial' : '/gameMulti';
-            window.location.href = `${targetPage}?${queryParams.toString()}`;
+            window.location.href = targetPage; 
+
         } else {
             alert("Erreur serveur lors de la création.");
         }
