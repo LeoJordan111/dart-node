@@ -125,8 +125,16 @@ function toggleQuickAdd() {
 
 async function addPlayerQuick() {
     const nicknameInput = document.getElementById('quick-nickname');
-    const nickname = nicknameInput.value;
-    if (!nickname) return alert("Pseudo vide");
+    let nickname = nicknameInput.value.trim(); 
+
+    if (nickname.length < 2 || nickname.length > 20) {
+        return alert("Le pseudo doit faire entre 2 et 20 caractères.");
+    }
+
+    const safePattern = /^[a-zA-Z0-9À-ÿ\s-]+$/;
+    if (!safePattern.test(nickname)) {
+        return alert("Le pseudo contient des caractères non autorisés.");
+    }
 
     try {
         const res = await fetch('/api/players/register', { 
@@ -134,13 +142,16 @@ async function addPlayerQuick() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nickname })
         });
+        
+        if (res.status === 409) return alert("Ce pseudo est déjà utilisé.");
+        
         if (res.ok) {
             nicknameInput.value = '';
             toggleQuickAdd();
             loadPlayers();
         }
     } catch (err) {
-        console.error("Erreur ajout rapide:", err);
+        console.error("Erreur réseau:", err);
     }
 }
 

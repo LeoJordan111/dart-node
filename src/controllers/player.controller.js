@@ -2,15 +2,31 @@ const playerService = require('../services/player.service');
 
 const register = async (req, res) => {
   try {
-    const { nickname } = req.body;
+    let { nickname } = req.body;
 
-    if (!nickname || nickname.trim() === "") {
+    nickname = nickname ? nickname.trim() : null;
+
+    if (!nickname) {
         return res.status(400).json({ error: "Le pseudo est requis" });
     }
 
-    const newPlayer = await playerService.createPlayer(nickname || null);
+    if (nickname.length < 2 || nickname.length > 20) {
+        return res.status(400).json({ error: "Le pseudo doit faire entre 2 et 20 caractères" });
+    }
+
+    const safePattern = /^[a-zA-Z0-9À-ÿ\s-]+$/;
+    if (!safePattern.test(nickname)) {
+        return res.status(400).json({ error: "Le pseudo contient des caractères non autorisés" });
+    }
+
+    const newPlayer = await playerService.createPlayer(nickname);
     res.status(201).json(newPlayer);
+
   } catch (error) {
+    if (error.message.includes('unique constraint') || error.code === 'P2002') {
+        return res.status(409).json({ error: "Ce pseudo existe déjà" });
+    }
+
     res.status(400).json({ 
         error: "Erreur lors de la création du joueur", 
         details: error.message 

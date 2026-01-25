@@ -29,18 +29,30 @@ function goToStats(nickname) {
 
 async function loadPlayersForSetup() {
     const container = document.getElementById('player-checkboxes');
-    
     if (!container) return; 
 
     try {
         const res = await fetch('/api/players');
         const players = await res.json();
         
-        container.innerHTML = players.map(p => `
-            <label>
-                <input type="checkbox" name="players" value="${p.id}"> ${p.nickname}
-            </label>
-        `).join('<br>');
+        
+        container.innerHTML = "";
+
+        players.forEach(p => {
+            const label = document.createElement('label');
+            label.className = "player-item"; 
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'players';
+            checkbox.value = p.id;
+            
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(` ${p.nickname}`));
+            
+            container.appendChild(label);
+            container.appendChild(document.createElement('br'));
+        });
     } catch (error) {
         console.error("Erreur lors du chargement des joueurs :", error);
     }
